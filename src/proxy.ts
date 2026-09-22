@@ -11,7 +11,7 @@ function isSupabaseConfigured(): boolean {
   return true;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -82,3 +82,9 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
+
+// Default export for Next.js 16 proxy convention
+export default proxy;
+
+// Backwards compatibility alias
+export const middleware = proxy;

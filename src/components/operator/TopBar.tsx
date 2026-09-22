@@ -84,6 +84,7 @@ export function TopBar() {
 
         {formattedDate && (
           <span
+            suppressHydrationWarning
             className="text-xs px-2 py-0.5 rounded"
             style={{
               color: "var(--color-fg-subtle)",
