@@ -41,6 +41,8 @@ export type PresentationActionType =
   | 'SET_SLIDES'
   | 'SET_STAGE_ALERT'
   | 'DISMISS_STAGE_ALERT'
+  | 'SHOW_ALERT'
+  | 'CLEAR_ALERT'
   | 'SET_TRANSITION';
 
 export type PresentationAction =
@@ -61,7 +63,15 @@ export type PresentationAction =
   | { type: 'SHOW_LOWER_THIRD'; text: string; subtext?: string }
   | { type: 'SET_SLIDES'; slides: PresentationSlide[] }
   | { type: 'SET_STAGE_ALERT'; alert: StageAlert }
+  | {
+      type: 'SHOW_ALERT';
+      message: string;
+      target?: 'stage' | 'congregation' | 'all';
+      durationMs?: number;
+      severity?: 'info' | 'warning' | 'urgent';
+    }
   | { type: 'DISMISS_STAGE_ALERT' }
+  | { type: 'CLEAR_ALERT' }
   | { type: 'SET_TRANSITION'; transitionType: TransitionType; durationMs?: number };
 
 // ─── Action Dispatcher ────────────────────────────────────────────────────────
@@ -132,7 +142,19 @@ export function dispatch(action: PresentationAction): void {
       store.setStageAlert(action.alert);
       break;
 
+    case 'SHOW_ALERT':
+      store.setStageAlert({
+        id: `alert-${Date.now()}`,
+        message: action.message,
+        target: action.target ?? 'all',
+        createdAt: Date.now(),
+        durationMs: action.durationMs,
+        severity: action.severity,
+      });
+      break;
+
     case 'DISMISS_STAGE_ALERT':
+    case 'CLEAR_ALERT':
       store.dismissStageAlert();
       break;
 

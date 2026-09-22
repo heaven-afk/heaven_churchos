@@ -54,15 +54,18 @@ export const OUTPUT_TARGET_REGISTRY: OutputTargetConfig[] = [
       supportsMedia: false,
       supportsNextPreview: false,
       isAlphaTransparent: true,
+      defaultLayout: 'lower-third',
     },
     defaultTransition: { type: 'dissolve', durationMs: 200 },
   },
 ];
+
+export const DEFAULT_DISPLAY_TARGET = 'congregation';
 
 export const OUTPUT_TARGET_MAP: Record<string, OutputTargetConfig> = Object.fromEntries(
   OUTPUT_TARGET_REGISTRY.map((t) => [t.id, t])
 );
 
 export function getOutputTargetConfig(targetId: string): OutputTargetConfig {
-  return OUTPUT_TARGET_MAP[targetId] ?? OUTPUT_TARGET_MAP['congregation'];
+  return OUTPUT_TARGET_MAP[targetId] ?? OUTPUT_TARGET_MAP[DEFAULT_DISPLAY_TARGET];
 }

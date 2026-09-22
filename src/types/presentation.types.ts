@@ -86,6 +86,7 @@ export interface OutputTargetConfig {
     supportsMedia: boolean;
     supportsNextPreview: boolean;
     isAlphaTransparent: boolean;
+    defaultLayout?: LayoutId;
   };
   defaultTransition: {
     type: TransitionType;
@@ -106,6 +107,7 @@ export interface StageAlert {
   target: 'stage' | 'congregation' | 'all';
   createdAt: number;
   durationMs?: number;
+  severity?: 'info' | 'warning' | 'urgent';
 }
 
 // ─── Output State ─────────────────────────────────────────────────────────────

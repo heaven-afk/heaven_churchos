@@ -1,24 +1,28 @@
 import type { Metadata } from "next";
-import { PresentationCanvas } from "@/components/presentation/PresentationCanvas";
+import { Suspense } from "react";
+import { PresentationPageClient } from "./PresentationPageClient";
 
 export const metadata: Metadata = {
   title: "Presentation Output — Veyrin",
 };
 
 /**
- * Presentation output window.
+ * Presentation output window — Phase 2
  *
- * This route is opened as a separate browser window/tab targeting the
- * congregation display. It subscribes to presentation state and renders
- * the live slide.
+ * This route is opened as a separate browser window targeting one of:
+ *   /presentation?target=congregation  (default - full visual output)
+ *   /presentation?target=stage         (confidence monitor)
+ *   /presentation?target=livestream    (alpha-transparent lower-third)
  *
- * In Phase 0, this renders a development view showing the current output state.
- * In Phase 2+, this becomes a full-bleed presentation canvas.
+ * The target parameter selects the OutputTargetConfig from the registry.
+ * useSearchParams() requires a Suspense boundary in Next.js.
  */
 export default function PresentationPage() {
   return (
     <main className="h-screen w-screen overflow-hidden bg-black">
-      <PresentationCanvas isReceiver={true} />
+      <Suspense fallback={<div className="h-screen w-screen bg-black" />}>
+        <PresentationPageClient />
+      </Suspense>
     </main>
   );
 }

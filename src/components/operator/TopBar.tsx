@@ -2,7 +2,8 @@
 
 import React from "react";
 import { EmergencyControls } from "./EmergencyControls";
-import { displayAdapter } from "@/providers/display/browser.adapter";
+import { TransitionPicker } from "./TransitionPicker";
+import { OutputsMenu } from "./OutputsMenu";
 import { useOperatorBroadcaster } from "@/hooks/usePresentationSync";
 
 import { useServiceStore } from "@/store/service.store";
@@ -31,9 +32,6 @@ export function TopBar() {
   const organization = useAuthStore((s) => s.organization);
   const signOut = useAuthStore((s) => s.signOut);
 
-  const handleOpenOutput = async () => {
-    await displayAdapter.activateOutput("congregation");
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -160,22 +158,11 @@ export function TopBar() {
         )}
       </div>
 
-      {/* Open Presentation Output Trigger */}
-      <button
-        id="btn-topbar-output"
-        onClick={handleOpenOutput}
-        className="text-xs px-2.5 py-1 rounded transition-colors font-medium flex items-center gap-1.5 border"
-        style={{
-          background: "var(--color-surface-2)",
-          color: "var(--color-fg-default)",
-          borderColor: "var(--color-border)",
-        }}
-        title="Open presentation output window"
-        aria-label="Open presentation output window"
-      >
-        <span>Output Window</span>
-        <span className="text-[10px] opacity-60">↗</span>
-      </button>
+      {/* Slide Transition Selector (Phase 2 WS3) */}
+      <TransitionPicker />
+
+      {/* Outputs Menu (Phase 2 WS7: Congregation, Stage, Livestream, Alerts) */}
+      <OutputsMenu />
 
       {/* Emergency controls — always visible */}
       <EmergencyControls />
