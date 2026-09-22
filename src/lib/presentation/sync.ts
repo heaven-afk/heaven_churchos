@@ -1,8 +1,9 @@
 /**
  * Presentation Output Cross-Window Synchronization
  *
- * Facilitates zero-latency communication between the Operator Workstation
- * and the Presentation Window (/presentation) via BroadcastChannel and localStorage.
+ * Facilitates communication between the Operator Workstation
+ * and Presentation Windows (/presentation?target=...) via BroadcastChannel
+ * and localStorage. Supports all registered output targets.
  */
 
 import type {
@@ -10,6 +11,8 @@ import type {
   PresentationSlide,
   LayoutId,
   Background,
+  StageAlert,
+  TransitionType,
 } from '@/types/presentation.types';
 
 export const PRESENTATION_CHANNEL_NAME = 'veyrin_presentation_channel';
@@ -18,8 +21,12 @@ export const PRESENTATION_STORAGE_KEY = 'veyrin_presentation_state';
 export interface SyncedPresentationState {
   status: OutputStatus;
   liveSlide: PresentationSlide | null;
+  nextSlide: PresentationSlide | null;
   layoutOverride: LayoutId | null;
   backgroundOverride: Background | null;
+  activeAlert: StageAlert | null;
+  activeTransition: TransitionType;
+  transitionDurationMs: number;
   updatedAt: number;
 }
 
@@ -27,9 +34,6 @@ export type PresentationSyncMessage =
   | { type: 'STATE_UPDATE'; payload: SyncedPresentationState }
   | { type: 'REQUEST_SYNC' };
 
-/**
- * Broadcasts the current live presentation state to other windows/tabs.
- */
 export function broadcastPresentationState(
   state: Omit<SyncedPresentationState, 'updatedAt'>
 ): void {
@@ -40,14 +44,12 @@ export function broadcastPresentationState(
     updatedAt: Date.now(),
   };
 
-  // 1. Save to localStorage for initial load hydration
   try {
     localStorage.setItem(PRESENTATION_STORAGE_KEY, JSON.stringify(payload));
   } catch (err) {
     console.warn('[PresentationSync] Failed to persist state to localStorage:', err);
   }
 
-  // 2. Broadcast to open windows via BroadcastChannel
   if ('BroadcastChannel' in window) {
     try {
       const channel = new BroadcastChannel(PRESENTATION_CHANNEL_NAME);
@@ -60,9 +62,6 @@ export function broadcastPresentationState(
   }
 }
 
-/**
- * Reads the latest presentation state from localStorage.
- */
 export function getStoredPresentationState(): SyncedPresentationState | null {
   if (typeof window === 'undefined') return null;
   try {
@@ -75,10 +74,6 @@ export function getStoredPresentationState(): SyncedPresentationState | null {
   }
 }
 
-/**
- * Listens for state updates and sync requests.
- * Returns an unsubscribe cleanup function.
- */
 export function listenToPresentationSync({
   onStateUpdate,
   onRequestSync,
@@ -96,7 +91,6 @@ export function listenToPresentationSync({
       channel.onmessage = (event: MessageEvent<PresentationSyncMessage>) => {
         const msg = event.data;
         if (!msg || typeof msg !== 'object') return;
-
         if (msg.type === 'STATE_UPDATE' && onStateUpdate) {
           onStateUpdate(msg.payload);
         } else if (msg.type === 'REQUEST_SYNC' && onRequestSync) {
@@ -108,7 +102,6 @@ export function listenToPresentationSync({
     }
   }
 
-  // Also listen for storage events as fallback across tabs
   const handleStorage = (e: StorageEvent) => {
     if (e.key === PRESENTATION_STORAGE_KEY && e.newValue && onStateUpdate) {
       try {
@@ -123,15 +116,10 @@ export function listenToPresentationSync({
 
   return () => {
     window.removeEventListener('storage', handleStorage);
-    if (channel) {
-      channel.close();
-    }
+    if (channel) channel.close();
   };
 }
 
-/**
- * Sends a request across the channel asking any active operator window for current state.
- */
 export function requestPresentationSync(): void {
   if (typeof window === 'undefined') return;
   if ('BroadcastChannel' in window) {

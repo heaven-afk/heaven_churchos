@@ -5,7 +5,10 @@
  * UI components, keyboard shortcuts, remote controls, and future APIs
  * all call these actions — never duplicate this logic elsewhere.
  *
- * Pattern: dispatch(action) → updates presentation store → triggers render & output sync
+ * Phase 2 additions:
+ * - SET_STAGE_ALERT: dispatch a non-destructive overlay alert
+ * - DISMISS_STAGE_ALERT: clear active alert
+ * - SET_TRANSITION: change content layer transition style
  */
 
 import { usePresentationStore } from '@/store/presentation.store';
@@ -13,6 +16,8 @@ import type {
   LayoutId,
   Background,
   PresentationSlide,
+  StageAlert,
+  TransitionType,
 } from '@/types/presentation.types';
 
 // ─── Action Discriminated Union ───────────────────────────────────────────────
@@ -33,7 +38,10 @@ export type PresentationActionType =
   | 'CHANGE_BACKGROUND'
   | 'SHOW_SCRIPTURE'
   | 'SHOW_LOWER_THIRD'
-  | 'SET_SLIDES';
+  | 'SET_SLIDES'
+  | 'SET_STAGE_ALERT'
+  | 'DISMISS_STAGE_ALERT'
+  | 'SET_TRANSITION';
 
 export type PresentationAction =
   | { type: 'NEXT_SLIDE' }
@@ -51,19 +59,13 @@ export type PresentationAction =
   | { type: 'CHANGE_BACKGROUND'; background: Background | null }
   | { type: 'SHOW_SCRIPTURE'; slideId: string }
   | { type: 'SHOW_LOWER_THIRD'; text: string; subtext?: string }
-  | { type: 'SET_SLIDES'; slides: PresentationSlide[] };
+  | { type: 'SET_SLIDES'; slides: PresentationSlide[] }
+  | { type: 'SET_STAGE_ALERT'; alert: StageAlert }
+  | { type: 'DISMISS_STAGE_ALERT' }
+  | { type: 'SET_TRANSITION'; transitionType: TransitionType; durationMs?: number };
 
 // ─── Action Dispatcher ────────────────────────────────────────────────────────
 
-/**
- * dispatch() is the single entry point for all presentation commands.
- *
- * Usage:
- *   dispatch({ type: 'NEXT_SLIDE' })
- *   dispatch({ type: 'BLACK_SCREEN' })
- *   dispatch({ type: 'SEND_LIVE' })
- *   dispatch({ type: 'SET_LAYOUT', layoutId: 'lower-third' })
- */
 export function dispatch(action: PresentationAction): void {
   const store = usePresentationStore.getState();
 
@@ -126,8 +128,19 @@ export function dispatch(action: PresentationAction): void {
       store.setSlides(action.slides);
       break;
 
+    case 'SET_STAGE_ALERT':
+      store.setStageAlert(action.alert);
+      break;
+
+    case 'DISMISS_STAGE_ALERT':
+      store.dismissStageAlert();
+      break;
+
+    case 'SET_TRANSITION':
+      store.setTransition(action.transitionType, action.durationMs);
+      break;
+
     default: {
-      // Exhaustiveness check — TypeScript will error if a case is missing
       const _exhaustive: never = action;
       console.error('[PresentationActions] Unhandled action:', _exhaustive);
     }

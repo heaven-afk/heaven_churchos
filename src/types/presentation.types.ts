@@ -1,9 +1,12 @@
 /**
  * Presentation domain types.
  *
- * These types describe the visual presentation state — separate from
- * the content being displayed. See spec §14 for the Content/Layout/Background
- * separation model.
+ * Phase 2 additions:
+ * - DisplayTarget: generalized output target identifier
+ * - OutputTargetConfig: per-target rendering configuration (decoupled from shared state)
+ * - TransitionType: visual transition style
+ * - StageAlert: non-destructive temporary overlay message
+ * - OutputState extended with nextSlide, activeAlert, activeTransition
  */
 
 // ─── Layouts ─────────────────────────────────────────────────────────────────
@@ -20,7 +23,6 @@ export interface Layout {
   id: LayoutId | string;
   name: string;
   description?: string;
-  /** CSS class(es) applied to the presentation canvas for this layout */
   canvasClass: string;
 }
 
@@ -32,9 +34,7 @@ export interface Background {
   id: string;
   type: BackgroundType;
   name: string;
-  /** CSS value for color/gradient types */
   value?: string;
-  /** Media asset ID for image/video types */
   mediaId?: string;
 }
 
@@ -42,47 +42,88 @@ export interface Background {
 
 export interface PresentationSlide {
   id: string;
-  /** Primary title (for announcements, sermon points, etc.) */
   title?: string;
-  /** Plain text content for the slide */
   text: string;
-  /** Secondary text, e.g. scripture reference or speaker title */
   subtext?: string;
   layout: LayoutId | string;
   background: Background;
-  /** Optional media asset URL for image/video slides */
   mediaUrl?: string;
-  /** Media type for dedicated media slides */
   mediaType?: "image" | "video";
-  /** Text alignment */
   textAlign?: "left" | "center" | "right";
 }
 
-// ─── Output State ────────────────────────────────────────────────────────────
+// ─── Output Status ────────────────────────────────────────────────────────────
 
 export type OutputStatus = 'live' | 'black' | 'clear' | 'frozen';
 
+// ─── Phase 2: Output Targets ──────────────────────────────────────────────────
+
+/**
+ * A DisplayTarget identifies an output rendering pipeline.
+ * Phase 2 defines: congregation, stage, livestream.
+ * Future targets can be added to the registry without modifying PresentationState.
+ */
+export type DisplayTarget = 'congregation' | 'stage' | 'livestream' | (string & Record<never, never>);
+
+// ─── Phase 2: Transitions ─────────────────────────────────────────────────────
+
+export type TransitionType = 'cut' | 'dissolve';
+
+// ─── Phase 2: Output Target Configuration ─────────────────────────────────────
+
+/**
+ * Per-output rendering configuration.
+ * SEPARATE from PresentationState. Stored in src/config/outputs.ts.
+ */
+export interface OutputTargetConfig {
+  id: DisplayTarget;
+  name: string;
+  description: string;
+  routePath: string;
+  windowName: string;
+  capabilities: {
+    supportsBackground: boolean;
+    supportsMedia: boolean;
+    supportsNextPreview: boolean;
+    isAlphaTransparent: boolean;
+  };
+  defaultTransition: {
+    type: TransitionType;
+    durationMs: number;
+  };
+}
+
+// ─── Phase 2: Stage Alert ─────────────────────────────────────────────────────
+
+/**
+ * A non-destructive temporary overlay message.
+ * Rendered on Layer 4 (Overlay) above the active slide.
+ * Dismissal restores the underlying presentation without operator re-send.
+ */
+export interface StageAlert {
+  id: string;
+  message: string;
+  target: 'stage' | 'congregation' | 'all';
+  createdAt: number;
+  durationMs?: number;
+}
+
+// ─── Output State ─────────────────────────────────────────────────────────────
+
 export interface OutputState {
   status: OutputStatus;
-  /** The slide currently shown to the audience */
   liveSlide: PresentationSlide | null;
-  /** The slide currently being previewed/staged by the operator */
   previewSlide: PresentationSlide | null;
-  /** Pre-rendered next slide for preview */
   nextSlide: PresentationSlide | null;
-  /** Active layout override (overrides the slide's own layout) */
   layoutOverride: LayoutId | null;
-  /** Active background override */
   backgroundOverride: Background | null;
+  activeAlert: StageAlert | null;
+  activeTransition: TransitionType;
+  transitionDurationMs: number;
 }
 
 // ─── Presentation Scene ──────────────────────────────────────────────────────
 
-/**
- * A PresentationScene is the resolved combination of Content + Layout +
- * Background that the presentation engine renders. It should never be
- * constructed directly by UI components — use the presentation action system.
- */
 export interface PresentationScene {
   slide: PresentationSlide;
   layout: Layout;

@@ -1,9 +1,8 @@
 /**
- * usePresentationSync Hook
+ * usePresentationSync Hook — Phase 2
  *
  * Synchronizes presentation output windows with the operator window in real time.
- * Used on the `/presentation` page to receive live updates,
- * and optionally in operator workstation to respond to sync requests.
+ * Phase 2: Broadcasts nextSlide, activeAlert, activeTransition, transitionDurationMs.
  */
 
 'use client';
@@ -18,42 +17,23 @@ import {
   type SyncedPresentationState,
 } from '@/lib/presentation/sync';
 
-/**
- * Hook for the presentation output window (/presentation).
- * Hydrates initial state from storage and subscribes to live updates.
- */
 export function usePresentationReceiver(enabled: boolean = true): void {
   const hydrateFromSync = usePresentationStore((s) => s.hydrateFromSync);
 
   useEffect(() => {
     if (!enabled) return;
-
-    // 1. Initial hydration from localStorage
     const cached = getStoredPresentationState();
-    if (cached) {
-      hydrateFromSync(cached);
-    }
-
-    // 2. Request current live state from active operator window
+    if (cached) hydrateFromSync(cached);
     requestPresentationSync();
-
-    // 3. Listen for continuous live updates
     const unsubscribe = listenToPresentationSync({
       onStateUpdate: (state: SyncedPresentationState) => {
         hydrateFromSync(state);
       },
     });
-
-    return () => {
-      unsubscribe();
-    };
+    return () => { unsubscribe(); };
   }, [enabled, hydrateFromSync]);
 }
 
-/**
- * Hook for the operator workstation window.
- * Listens for requests from newly opened presentation windows and provides the current state.
- */
 export function useOperatorBroadcaster(): void {
   useEffect(() => {
     const unsubscribe = listenToPresentationSync({
@@ -62,14 +42,15 @@ export function useOperatorBroadcaster(): void {
         broadcastPresentationState({
           status: store.status,
           liveSlide: store.liveSlide,
+          nextSlide: store.nextSlide,
           layoutOverride: store.layoutOverride,
           backgroundOverride: store.backgroundOverride,
+          activeAlert: store.activeAlert,
+          activeTransition: store.activeTransition,
+          transitionDurationMs: store.transitionDurationMs,
         });
       },
     });
-
-    return () => {
-      unsubscribe();
-    };
+    return () => { unsubscribe(); };
   }, []);
 }
