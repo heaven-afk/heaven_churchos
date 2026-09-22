@@ -39,7 +39,11 @@ export function MediaLayer({ slide, supportsMedia = true }: MediaLayerProps) {
           loop
           muted
           playsInline
+          preload="auto"
           className="w-full h-full object-contain"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
         />
       </div>
     );

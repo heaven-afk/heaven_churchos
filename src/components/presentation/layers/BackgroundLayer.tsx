@@ -52,9 +52,13 @@ export function BackgroundLayer({ background, status, isAlphaTransparent = false
         loop
         muted
         playsInline
+        preload="auto"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         style={{ zIndex: 10 }}
         aria-hidden="true"
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
       />
     );
   }

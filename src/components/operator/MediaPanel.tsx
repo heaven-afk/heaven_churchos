@@ -174,15 +174,7 @@ export function MediaPanel() {
                 title="Click to stage preview"
               >
                 {media.type === "video" ? (
-                  <video
-                    src={media.url}
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-full object-cover"
-                    onMouseEnter={(e) => e.currentTarget.play()}
-                    onMouseLeave={(e) => e.currentTarget.pause()}
-                  />
+                  <VideoThumbnail url={media.url} name={media.name} />
                 ) : (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
@@ -282,5 +274,55 @@ export function MediaPanel() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Resilient video thumbnail that safely manages playback and handles
+ * unsupported source or network load errors gracefully.
+ */
+function VideoThumbnail({ url, name }: { url: string; name: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError || !url) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-black/70 gap-1.5 p-2 text-center select-none">
+        <span className="text-xl opacity-70">🎬</span>
+        <span className="text-[10px] text-white/50 truncate max-w-full font-mono">
+          {name}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <video
+      src={url}
+      muted
+      loop
+      playsInline
+      preload="none"
+      className="w-full h-full object-cover"
+      onMouseEnter={(e) => {
+        try {
+          const p = e.currentTarget.play();
+          if (p && typeof p.catch === "function") {
+            p.catch(() => {});
+          }
+        } catch {
+          // ignore playback errors
+        }
+      }}
+      onMouseLeave={(e) => {
+        try {
+          e.currentTarget.pause();
+        } catch {
+          // ignore pause errors
+        }
+      }}
+      onError={() => {
+        setHasError(true);
+      }}
+    />
   );
 }
