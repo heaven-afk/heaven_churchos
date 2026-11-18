@@ -12,6 +12,7 @@
  */
 
 import { usePresentationStore } from "@/store/presentation.store";
+import type { SlideAppearance } from "@/types/text-style.types";
 import type { SyncedPresentationState } from "@/lib/presentation/sync";
 import type {
   LayoutId,
@@ -24,6 +25,8 @@ import type {
 // ─── Action Discriminated Union ───────────────────────────────────────────────
 
 export type PresentationActionType =
+  | "STYLE_PREVIEW"
+  | "RECEIVE_OUTPUT"
   | "NEXT_SLIDE"
   | "PREVIOUS_SLIDE"
   | "GO_TO_SLIDE"
@@ -47,6 +50,7 @@ export type PresentationActionType =
   | "SET_TRANSITION";
 
 export type PresentationAction =
+  | { type: "STYLE_PREVIEW"; appearance: SlideAppearance }
   | { type: "RECEIVE_OUTPUT"; state: SyncedPresentationState }
   | { type: "NEXT_SLIDE" }
   | { type: "PREVIOUS_SLIDE" }
@@ -63,7 +67,7 @@ export type PresentationAction =
   | { type: "CHANGE_BACKGROUND"; background: Background | null }
   | { type: "SHOW_SCRIPTURE"; slideId: string }
   | { type: "SHOW_LOWER_THIRD"; text: string; subtext?: string }
-  | { type: "SET_SLIDES"; slides: PresentationSlide[] }
+  | { type: "SET_SLIDES"; slides: PresentationSlide[]; sourceItemId?: string }
   | { type: "SET_STAGE_ALERT"; alert: StageAlert }
   | {
       type: "SHOW_ALERT";
@@ -82,6 +86,9 @@ export function dispatch(action: PresentationAction): void {
   const store = usePresentationStore.getState();
 
   switch (action.type) {
+    case "STYLE_PREVIEW":
+      store.stylePreview(action.appearance);
+      break;
     case "RECEIVE_OUTPUT":
       store.hydrateFromSync(action.state);
       break;
@@ -140,7 +147,7 @@ export function dispatch(action: PresentationAction): void {
       break;
 
     case "SET_SLIDES":
-      store.setSlides(action.slides);
+      store.setSlides(action.slides, action.sourceItemId);
       break;
 
     case "SET_STAGE_ALERT":

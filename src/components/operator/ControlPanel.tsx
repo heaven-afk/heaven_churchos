@@ -1,202 +1,76 @@
 "use client";
 
 import { useUIStore } from "@/store/ui.store";
-import { usePresentationStore } from "@/store/presentation.store";
-import { dispatch } from "@/actions/presentation.actions";
-import type { LayoutId } from "@/types/presentation.types";
-
+import { useServiceStore } from "@/store/service.store";
 import { ScripturePanel } from "./ScripturePanel";
 import { SongLibraryPanel } from "./SongLibraryPanel";
 import { TextPanel } from "./TextPanel";
 import { MediaPanel } from "./MediaPanel";
+import { AppearancePanel } from "./AppearancePanel";
 
-/**
- * ControlPanel — right panel for Songs, Scripture, Text, Media, layout, and background.
- *
- * Implements Phase 1 §5 (Scripture), §6 (Songs), and §9 (Text, Image & Video Media).
- */
+const TABS = [
+  { id: "songs", label: "Songs", icon: "♪" },
+  { id: "scripture", label: "Bible", icon: "≡" },
+  { id: "text", label: "Text", icon: "T" },
+  { id: "media", label: "Media", icon: "▧" },
+  { id: "layout", label: "Design", icon: "Aa" },
+  { id: "background", label: "Backdrops", icon: "◒" },
+] as const;
+
 export function ControlPanel() {
   const isOpen = useUIStore((s) => s.isControlPanelOpen);
   const activeTab = useUIStore((s) => s.controlPanelTab);
   const setTab = useUIStore((s) => s.setControlPanelTab);
-  const layoutOverride = usePresentationStore((s) => s.layoutOverride);
-
+  const selectedId = useServiceStore((s) => s.selectedItemId);
   if (!isOpen) return null;
+  const panels = {
+    songs: <SongLibraryPanel />,
+    scripture: <ScripturePanel />,
+    text: null,
+    media: <MediaPanel />,
+    layout: <AppearancePanel />,
+    background: <MediaPanel />,
+  };
 
   return (
-    <aside
-      className="flex flex-col border-l overflow-hidden shrink-0"
-      style={{
-        width: "var(--panel-control-width)",
-        background: "var(--color-bg-elevated)",
-        borderColor: "var(--color-border)",
-      }}
-      aria-label="Presentation controls"
-      role="complementary"
-    >
-      {/* Tab bar */}
+    <aside className="studio-resources" aria-label="Presentation controls">
+      <div className="resource-panel-heading">
+        <span className="eyebrow">Your creative toolkit</span>
+        <span>Resources</span>
+      </div>
       <div
-        className="resource-tabs grid grid-cols-3 border-b shrink-0"
-        style={{ borderColor: "var(--color-border)" }}
+        className="studio-resource-tabs"
         role="tablist"
         aria-label="Control panel tabs"
       >
-        {(["songs", "scripture", "text", "media", "layout", "background"] as const).map((tab) => (
+        {TABS.map((tab) => (
           <button
-            key={tab}
+            type="button"
+            key={tab.id}
             role="tab"
-            id={`tab-${tab}`}
-            aria-selected={activeTab === tab}
-            aria-controls={`tabpanel-${tab}`}
-            onClick={() => setTab(tab)}
-            className="py-3 px-2 text-xs font-semibold capitalize transition-colors whitespace-nowrap"
-            style={{
-              color:
-                activeTab === tab
-                  ? "var(--color-primary)"
-                  : "var(--color-fg-subtle)",
-              borderBottom:
-                activeTab === tab
-                  ? "2px solid var(--color-primary)"
-                  : "2px solid transparent",
-            }}
+            id={`tab-${tab.id}`}
+            aria-selected={activeTab === tab.id}
+            aria-controls={`tabpanel-${tab.id}`}
+            onClick={() => setTab(tab.id)}
           >
-            {tab}
+            <span className="resource-tab-icon" aria-hidden="true">
+              {tab.icon}
+            </span>
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
-
-      {/* Tab panels */}
-      <div className="flex-1 overflow-y-auto p-3">
-        {activeTab === "songs" && (
-          <div
-            id="tabpanel-songs"
-            role="tabpanel"
-            aria-labelledby="tab-songs"
-            className="h-full"
-          >
-            <SongLibraryPanel />
-          </div>
-        )}
-
-        {activeTab === "scripture" && (
-          <div
-            id="tabpanel-scripture"
-            role="tabpanel"
-            aria-labelledby="tab-scripture"
-          >
-            <ScripturePanel />
-          </div>
-        )}
-
-        {activeTab === "text" && (
-          <div
-            id="tabpanel-text"
-            role="tabpanel"
-            aria-labelledby="tab-text"
-            className="h-full"
-          >
-            <TextPanel />
-          </div>
-        )}
-
-        {activeTab === "media" && (
-          <div
-            id="tabpanel-media"
-            role="tabpanel"
-            aria-labelledby="tab-media"
-            className="h-full"
-          >
-            <MediaPanel />
-          </div>
-        )}
-
-        {activeTab === "layout" && (
-          <div
-            id="tabpanel-layout"
-            role="tabpanel"
-            aria-labelledby="tab-layout"
-          >
-            <LayoutPicker currentLayout={layoutOverride} />
-          </div>
-        )}
-
-        {activeTab === "background" && (
-          <div
-            id="tabpanel-background"
-            role="tabpanel"
-            aria-labelledby="tab-background"
-          >
-            <MediaPanel />
-          </div>
-        )}
+      <div
+        className="resource-panel-scroll"
+        id={`tabpanel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${activeTab}`}
+      >
+        <div hidden={activeTab !== "text"}>
+          <TextPanel key={selectedId ?? "new-text"} />
+        </div>
+        {panels[activeTab]}
       </div>
     </aside>
   );
 }
-
-// ─── Layout Picker ────────────────────────────────────────────────────────────
-
-const LAYOUTS: { id: LayoutId; name: string; description: string }[] = [
-  { id: "full-screen", name: "Full Screen", description: "Content fills the entire display" },
-  { id: "lower-third", name: "Lower Third", description: "Content in the lower third of the display" },
-  { id: "caption", name: "Caption", description: "Centred caption with subtitle bar" },
-  { id: "corner", name: "Corner", description: "Content anchored to a corner" },
-  { id: "overlay", name: "Overlay", description: "Semi-transparent overlay on background" },
-];
-
-function LayoutPicker({ currentLayout }: { currentLayout: LayoutId | null }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <p
-        className="text-xs font-semibold uppercase tracking-widest mb-2"
-        style={{ color: "var(--color-fg-muted)" }}
-      >
-        Layout
-      </p>
-      {LAYOUTS.map((layout) => {
-        const isActive = currentLayout === layout.id;
-        return (
-          <button
-            key={layout.id}
-            id={`layout-${layout.id}`}
-            onClick={() =>
-              dispatch({
-                type: "CHANGE_LAYOUT",
-                layoutId: layout.id,
-              })
-            }
-            className="w-full text-left rounded-lg px-3 py-2.5 transition-all"
-            style={{
-              background: isActive
-                ? "var(--color-primary-subtle)"
-                : "var(--color-surface-1)",
-              border: isActive
-                ? "1px solid var(--color-primary)"
-                : "1px solid var(--color-border)",
-            }}
-            aria-pressed={isActive}
-          >
-            <p
-              className="text-sm font-medium"
-              style={{
-                color: isActive
-                  ? "var(--color-primary)"
-                  : "var(--color-fg-default)",
-              }}
-            >
-              {layout.name}
-            </p>
-            <p
-              className="text-xs mt-0.5"
-              style={{ color: "var(--color-fg-subtle)" }}
-            >
-              {layout.description}
-            </p>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-

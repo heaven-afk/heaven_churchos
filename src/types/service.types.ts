@@ -15,6 +15,7 @@ export type ServiceItemType =
   | 'custom';
 
 export interface ServiceItem {
+  appearance?: import('./text-style.types').SlideAppearance;
   id: string;
   type: ServiceItemType;
   title: string;

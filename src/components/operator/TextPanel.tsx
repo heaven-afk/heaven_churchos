@@ -1,315 +1,325 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { dispatch } from "@/actions/presentation.actions";
-import { useServiceStore, selectActiveItems } from "@/store/service.store";
+import { useServiceStore } from "@/store/service.store";
+import { usePresentationStore } from "@/store/presentation.store";
 import {
   createTextPresentationSlides,
   createTextServiceItem,
+  getTextOptions,
 } from "@/lib/content/text.service";
+import { TEXT_TEMPLATES } from "@/config/text-templates";
+import { DEFAULT_TYPOGRAPHY, PRESENTATION_COLORS } from "@/config/typography";
+import { resolveTypography, getItemAppearance } from "@/lib/presentation/typography";
+import { PresentationCanvas } from "@/components/presentation/PresentationCanvas";
+import { TypographyControls } from "./TypographyControls";
+import type { CreateTextOptions, TextTemplate } from "@/types/text-style.types";
 import type { LayoutId } from "@/types/presentation.types";
 
-interface TextTemplate {
-  label: string;
-  title: string;
-  body: string;
-  subtext: string;
-  layout: LayoutId;
-  textAlign: "left" | "center" | "right";
-}
-
-const TEMPLATES: TextTemplate[] = [
-  {
-    label: "Announcement",
-    title: "WELCOME HOME",
-    body: "We are delighted to worship together today.\nJoin us for fellowship right after the service in the lobby!",
-    subtext: "Grace Community Church",
-    layout: "full-screen",
-    textAlign: "center",
-  },
-  {
-    label: "Sermon Note",
-    title: "WALKING IN FAITH",
-    body: "Point 1: Faith looks beyond present circumstances and trusts in God's eternal promise.",
-    subtext: "Series: The Unshakable Life",
-    layout: "full-screen",
-    textAlign: "left",
-  },
-  {
-    label: "Speaker Name",
-    title: "Pastor Michael Davis",
-    body: "Senior Pastor",
-    subtext: "Grace Community Church",
-    layout: "lower-third",
-    textAlign: "left",
-  },
-  {
-    label: "Quote",
-    title: "",
-    body: '"Grace means that all of our struggles are surrounded by the boundless love of God."',
-    subtext: "— C.S. Lewis",
-    layout: "caption",
-    textAlign: "center",
-  },
-];
-
 export function TextPanel() {
-  const [title, setTitle] = useState("WELCOME HOME");
-  const [body, setBody] = useState(
-    "We are delighted to worship together today.\nJoin us for fellowship right after the service in the lobby!"
+  const selected = useServiceStore((s) =>
+    s.currentService?.items.find((item) => item.id === s.selectedItemId)
   );
-  const [subtext, setSubtext] = useState("Grace Community Church");
-  const [layout, setLayout] = useState<LayoutId>("full-screen");
-  const [textAlign, setTextAlign] = useState<"left" | "center" | "right">("center");
-
+  const initial = selected?.type === "text" ? getTextOptions(selected.content) : null;
+  const appearance = selected ? getItemAppearance(selected) : undefined;
+  const [draft, setDraft] = useState<CreateTextOptions>(() => ({
+    ...(initial ?? TEXT_TEMPLATES[0]),
+    ...(initial ? appearance : {}),
+    typography: initial
+      ? resolveTypography(appearance?.typography ?? initial.typography)
+      : (TEXT_TEMPLATES[0].typography ?? DEFAULT_TYPOGRAPHY),
+  }));
+  const [editingId, setEditingId] = useState<string | null>(
+    initial ? (selected?.id ?? null) : null
+  );
+  const [feedback, setFeedback] = useState("");
+  const [section, setSection] = useState<"content" | "design">("content");
+  useEffect(
+    () =>
+      useServiceStore.subscribe((next, previous) => {
+        if (!editingId) return;
+        const item = next.currentService?.items.find((row) => row.id === editingId);
+        const oldItem = previous.currentService?.items.find(
+          (row) => row.id === editingId
+        );
+        if (!item || !oldItem) return;
+        const latest = getItemAppearance(item);
+        if (latest && latest !== getItemAppearance(oldItem))
+          setDraft((current) => ({ ...current, ...latest }));
+      }),
+    [editingId]
+  );
+  const status = usePresentationStore((s) => s.status);
   const addItem = useServiceStore((s) => s.addItem);
-  const items = useServiceStore(selectActiveItems);
-
-  const handleApplyTemplate = (tpl: TextTemplate) => {
-    setTitle(tpl.title);
-    setBody(tpl.body);
-    setSubtext(tpl.subtext);
-    setLayout(tpl.layout);
-    setTextAlign(tpl.textAlign);
+  const updateItem = useServiceStore((s) => s.updateItem);
+  const selectItem = useServiceStore((s) => s.selectItem);
+  const itemCount = useServiceStore(
+    (s) => s.currentService?.items.filter((item) => !item.isRemoved).length ?? 0
+  );
+  const slides = useMemo(() => createTextPresentationSlides(draft), [draft]);
+  const update = (patch: Partial<CreateTextOptions>) => {
+    setDraft((current) => ({ ...current, ...patch }));
+    setFeedback("");
   };
-
-  const getSlides = () => {
-    return createTextPresentationSlides({
-      title: title.trim() || undefined,
-      body,
-      subtext: subtext.trim() || undefined,
-      layout,
-      textAlign,
-    });
+  const applyTemplate = (template: TextTemplate) => {
+    setDraft({ ...template, typography: template.typography ?? DEFAULT_TYPOGRAPHY });
+    setFeedback("");
   };
-
-  const handleStagePreview = () => {
-    const slides = getSlides();
-    if (slides.length > 0) {
-      dispatch({ type: "SET_SLIDES", slides });
-      dispatch({ type: "SET_PREVIEW", slide: slides[0] });
+  const prepare = (
+    live = false,
+    sourceItemId: string | undefined = editingId ?? undefined
+  ) => {
+    if (!slides.length) return;
+    dispatch({ type: "SET_SLIDES", slides, sourceItemId });
+    dispatch({ type: live ? "SEND_LIVE" : "SET_PREVIEW", slide: slides[0] });
+    setFeedback(live ? "Sent to program." : "Preview updated. Program is unchanged.");
+  };
+  const save = () => {
+    if (!slides.length) return;
+    const item = createTextServiceItem(draft, itemCount);
+    const id = editingId ?? item.id;
+    if (editingId)
+      updateItem(editingId, {
+        title: item.title,
+        content: item.content,
+        notes: item.notes,
+        appearance: undefined,
+      });
+    else {
+      addItem(item);
+      setEditingId(id);
+      selectItem(id);
     }
-  };
-
-  const handleTakeLive = () => {
-    handleStagePreview();
-    dispatch({ type: "SEND_LIVE" });
-  };
-
-  const handleAddToService = () => {
-    const item = createTextServiceItem(
-      {
-        title: title.trim() || undefined,
-        body,
-        subtext: subtext.trim() || undefined,
-        layout,
-        textAlign,
-      },
-      items.length
+    prepare(false, id);
+    setFeedback(
+      editingId ? "Changes saved to this service item." : "Added to your service."
     );
-    addItem(item);
   };
 
   return (
-    <div className="flex flex-col h-full gap-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <span
-          className="text-xs font-semibold uppercase tracking-widest"
-          style={{ color: "var(--color-fg-muted)" }}
-        >
-          Text & Announcements
-        </span>
-      </div>
-
-      {/* Preset Templates */}
-      <div className="flex flex-wrap gap-1">
-        {TEMPLATES.map((tpl) => (
-          <button
-            key={tpl.label}
-            type="button"
-            onClick={() => handleApplyTemplate(tpl)}
-            className="px-2 py-1 rounded text-xs font-medium border transition-colors cursor-pointer"
-            style={{
-              background: "var(--color-surface-1)",
-              borderColor: "var(--color-border)",
-              color: "var(--color-fg-default)",
-            }}
-          >
-            {tpl.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Form Fields */}
-      <div className="space-y-3 flex-1 overflow-y-auto pr-0.5">
-        <div>
-          <label
-            className="block text-xs font-semibold uppercase tracking-wider mb-1"
-            style={{ color: "var(--color-fg-muted)" }}
-          >
-            Title
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. WELCOME TO CHURCH"
-            className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none"
-            style={{
-              background: "var(--color-surface-1)",
-              borderColor: "var(--color-border)",
-              color: "var(--color-fg-default)",
-            }}
-          />
-        </div>
-
-        <div>
-          <label
-            className="block text-xs font-semibold uppercase tracking-wider mb-1"
-            style={{ color: "var(--color-fg-muted)" }}
-          >
-            Body Text *
-          </label>
-          <textarea
-            rows={4}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Enter announcement, quote, or note text..."
-            className="w-full rounded-lg p-3 text-sm border focus:outline-none resize-y"
-            style={{
-              background: "var(--color-surface-1)",
-              borderColor: "var(--color-border)",
-              color: "var(--color-fg-default)",
-            }}
-          />
-        </div>
-
-        <div>
-          <label
-            className="block text-xs font-semibold uppercase tracking-wider mb-1"
-            style={{ color: "var(--color-fg-muted)" }}
-          >
-            Subtext / Speaker Title
-          </label>
-          <input
-            type="text"
-            value={subtext}
-            onChange={(e) => setSubtext(e.target.value)}
-            placeholder="e.g. Senior Pastor · Pastor Michael"
-            className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none"
-            style={{
-              background: "var(--color-surface-1)",
-              borderColor: "var(--color-border)",
-              color: "var(--color-fg-default)",
-            }}
-          />
-        </div>
-
-        {/* Alignment & Layout selectors */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label
-              className="block text-xs font-semibold uppercase tracking-wider mb-1"
-              style={{ color: "var(--color-fg-muted)" }}
-            >
-              Align
-            </label>
-            <div
-              className="flex rounded-lg border p-0.5"
-              style={{
-                background: "var(--color-surface-1)",
-                borderColor: "var(--color-border)",
+    <div className="text-studio">
+      <div className="editor-heading">
+        <p className="eyebrow">Text studio</p>
+        <div className="flex items-center justify-between gap-2">
+          <h2>{editingId ? "Refine your message." : "Make every word count."}</h2>
+          {editingId && (
+            <button
+              className="operator-chip"
+              onClick={() => {
+                setEditingId(null);
+                setDraft({
+                  ...TEXT_TEMPLATES[0],
+                  typography: TEXT_TEMPLATES[0].typography,
+                });
+                setFeedback("");
               }}
             >
-              {(["left", "center", "right"] as const).map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => setTextAlign(a)}
-                  className="flex-1 py-1 text-xs capitalize rounded transition-colors"
-                  style={{
-                    background:
-                      textAlign === a
-                        ? "var(--color-surface-2)"
-                        : "transparent",
-                    color:
-                      textAlign === a
-                        ? "var(--color-primary)"
-                        : "var(--color-fg-muted)",
-                  }}
-                >
-                  {a}
-                </button>
-              ))}
-            </div>
+              + New
+            </button>
+          )}
+        </div>
+        <p className="resource-description">
+          Announcements, sermon notes and moments worth sharing.
+        </p>
+      </div>
+      <div className="draft-preview">
+        <div className="draft-preview-label">
+          <span>Draft preview</span>
+          <span>
+            {slides.length} {slides.length === 1 ? "slide" : "slides"} · not live
+          </span>
+        </div>
+        <div className="draft-preview-canvas">
+          {slides[0] ? (
+            <PresentationCanvas
+              slide={slides[0]}
+              status="live"
+              layoutOverride={null}
+              backgroundOverride={null}
+              isThumbnail
+            />
+          ) : (
+            <p>Add a heading or message to begin.</p>
+          )}
+        </div>
+      </div>
+      <div
+        className="segmented-control editor-section-tabs"
+        role="group"
+        aria-label="Text editor section"
+      >
+        <button
+          aria-pressed={section === "content"}
+          onClick={() => setSection("content")}
+        >
+          Write
+        </button>
+        <button aria-pressed={section === "design"} onClick={() => setSection("design")}>
+          Type & colour
+        </button>
+      </div>
+      {section === "content" ? (
+        <div className="resource-panel">
+          <div className="template-grid">
+            {TEXT_TEMPLATES.map((template) => (
+              <button
+                type="button"
+                key={template.id}
+                onClick={() => applyTemplate(template)}
+              >
+                <span>{template.label}</span>
+                <small>{template.description}</small>
+              </button>
+            ))}
           </div>
-
-          <div>
-            <label
-              className="block text-xs font-semibold uppercase tracking-wider mb-1"
-              style={{ color: "var(--color-fg-muted)" }}
-            >
+          <div className="editor-field">
+            <label className="field-label" htmlFor="text-heading">
+              Heading
+            </label>
+            <input
+              id="text-heading"
+              className="operator-input"
+              value={draft.title ?? ""}
+              onChange={(e) => update({ title: e.target.value })}
+              placeholder="Your headline"
+            />
+          </div>
+          <div className="editor-field">
+            <div className="type-size-row">
+              <label className="field-label" htmlFor="text-body">
+                Message
+              </label>
+              <span className="editor-help">{draft.body.length} characters</span>
+            </div>
+            <textarea
+              id="text-body"
+              className="operator-input editor-textarea"
+              rows={5}
+              value={draft.body}
+              onChange={(e) => update({ body: e.target.value })}
+              placeholder="Write your message…"
+            />
+            <p className="editor-help">Leave a blank line to create the next slide.</p>
+          </div>
+          <div className="editor-field">
+            <label className="field-label" htmlFor="text-footer">
+              Footer / speaker title
+            </label>
+            <input
+              id="text-footer"
+              className="operator-input"
+              value={draft.subtext ?? ""}
+              onChange={(e) => update({ subtext: e.target.value })}
+              placeholder="Add a reference, name or subtitle"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="resource-panel">
+          <TypographyControls
+            value={resolveTypography(draft.typography)}
+            onChange={(typography) => update({ typography })}
+          />
+          <div className="editor-divider" />
+          <div className="editor-field">
+            <label className="field-label" htmlFor="text-layout">
               Layout
             </label>
             <select
-              value={layout}
-              onChange={(e) => setLayout(e.target.value as LayoutId)}
-              className="w-full rounded-lg px-2.5 py-1.5 text-xs border focus:outline-none cursor-pointer"
-              style={{
-                background: "var(--color-surface-1)",
-                borderColor: "var(--color-border)",
-                color: "var(--color-fg-default)",
-              }}
+              id="text-layout"
+              className="operator-input"
+              value={draft.layout ?? "full-screen"}
+              onChange={(e) => update({ layout: e.target.value as LayoutId })}
             >
-              <option value="full-screen">Full Screen</option>
-              <option value="lower-third">Lower Third</option>
+              <option value="full-screen">Full screen</option>
+              <option value="lower-third">Lower third</option>
               <option value="caption">Caption</option>
-              <option value="overlay">Overlay</option>
+              <option value="overlay">Corner overlay</option>
             </select>
           </div>
+          <div className="segmented-control" role="group" aria-label="Text alignment">
+            {(["left", "center", "right"] as const).map((textAlign) => (
+              <button
+                type="button"
+                key={textAlign}
+                aria-pressed={(draft.textAlign ?? "center") === textAlign}
+                onClick={() => update({ textAlign })}
+              >
+                {textAlign}
+              </button>
+            ))}
+          </div>
+          <fieldset>
+            <legend className="field-label">Slide background</legend>
+            <div className="colour-swatches">
+              {PRESENTATION_COLORS.map((color) => (
+                <button
+                  type="button"
+                  key={color.id}
+                  className="colour-swatch"
+                  style={{ background: color.value }}
+                  aria-label={`Background colour: ${color.label}`}
+                  aria-pressed={
+                    draft.background?.value === color.value ||
+                    (!draft.background && color.id === "black")
+                  }
+                  title={color.label}
+                  onClick={() =>
+                    update({
+                      background: {
+                        id: `solid-${color.id}`,
+                        type: "color",
+                        name: color.label,
+                        value: color.value,
+                      },
+                    })
+                  }
+                >
+                  <span aria-hidden="true">
+                    {draft.background?.value === color.value ||
+                    (!draft.background && color.id === "black")
+                      ? "✓"
+                      : ""}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="pt-2 border-t flex items-center gap-2 shrink-0" style={{ borderColor: "var(--color-border)" }}>
+      )}
+      <div className="editor-actions">
+        <div className="editor-two-columns">
+          <button
+            id="btn-preview-text"
+            className="operator-button"
+            disabled={!slides.length}
+            onClick={() => prepare()}
+          >
+            Preview
+          </button>
+          <button
+            id="btn-save-text"
+            className="operator-button"
+            disabled={!slides.length}
+            onClick={save}
+          >
+            {editingId ? "Save changes" : "+ Add to service"}
+          </button>
+        </div>
         <button
-          type="button"
-          onClick={handleStagePreview}
-          className="flex-1 py-1.5 px-2 rounded-lg text-xs font-medium border transition-colors cursor-pointer"
-          style={{
-            borderColor: "var(--color-border)",
-            color: "var(--color-fg-default)",
-            background: "var(--color-surface-1)",
-          }}
+          id="btn-live-text"
+          className="operator-button primary"
+          disabled={!slides.length || status === "frozen"}
+          onClick={() => prepare(true)}
         >
-          Stage Preview
+          Take live ↗
         </button>
-
-        <button
-          type="button"
-          onClick={handleAddToService}
-          className="flex-1 py-1.5 px-2 rounded-lg text-xs font-medium border transition-colors cursor-pointer"
-          style={{
-            borderColor: "var(--color-border)",
-            color: "var(--color-fg-default)",
-            background: "var(--color-surface-1)",
-          }}
-        >
-          + To Service
-        </button>
-
-        <button
-          type="button"
-          onClick={handleTakeLive}
-          className="py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-          style={{
-            background: "var(--color-live)",
-            color: "#ffffff",
-          }}
-        >
-          Take Live ↗
-        </button>
+        <p className="editor-help" role="status">
+          {status === "frozen"
+            ? "Unfreeze program before taking this draft live."
+            : feedback || "Your draft stays private until you take it live."}
+        </p>
       </div>
     </div>
   );

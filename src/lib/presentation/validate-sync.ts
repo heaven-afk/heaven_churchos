@@ -1,4 +1,5 @@
 import type { SyncedPresentationState } from "./sync";
+import { isSlideTypography } from "./typography";
 
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -16,6 +17,7 @@ const slide = (value: unknown): boolean =>
   typeof value.text === "string" &&
   typeof value.layout === "string" &&
   background(value.background) &&
+  (value.typography === undefined || isSlideTypography(value.typography)) &&
   ["title", "subtext", "mediaUrl"].every(
     (key) => value[key] === undefined || typeof value[key] === "string"
   );

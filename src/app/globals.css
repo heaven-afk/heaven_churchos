@@ -518,3 +518,365 @@ body:has(.alpha-output) {
     overflow-x: auto;
   }
 }
+
+/* Presentation text scales from its canvas, including the operator preview. */
+.slide-composition {
+  position: absolute;
+  inset: 0;
+  padding: 6cqw 7cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.3cqw;
+  width: 100%;
+  min-width: 0;
+  text-shadow: var(--shadow-presentation-text);
+}
+.slide-title,
+.slide-body,
+.slide-footer {
+  margin: 0;
+  max-width: 100%;
+}
+.slide-footer {
+  margin-top: 0.6cqw;
+}
+.slide-legibility-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 29;
+  background: var(--color-content-scrim);
+}
+.slide-composition[data-layout="lower-third"] {
+  top: auto;
+  padding: 5cqw 4cqw 3cqw;
+  background: var(--color-lower-third-gradient);
+}
+.slide-composition[data-layout="caption"] {
+  top: auto;
+  bottom: 4%;
+  padding: 0 5cqw;
+}
+.slide-composition[data-layout="caption"] .slide-content {
+  width: fit-content;
+  max-width: 100%;
+  padding: 2cqw 3cqw;
+  border-radius: 0.7cqw;
+  background: var(--color-caption-surface);
+}
+.slide-composition[data-layout="overlay"],
+.slide-composition[data-layout="corner"] {
+  top: auto;
+  left: auto;
+  right: 4%;
+  bottom: 4%;
+  width: 54%;
+  padding: 0;
+}
+.slide-composition[data-layout="overlay"] .slide-content,
+.slide-composition[data-layout="corner"] .slide-content {
+  padding: 2.5cqw;
+  border-radius: 0.7cqw;
+  background: var(--color-caption-surface);
+}
+
+/* Resource studio */
+.studio-resources {
+  width: var(--panel-control-width);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--color-bg-elevated);
+  border-left: 1px solid var(--color-border);
+}
+.resource-panel-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 20px 14px;
+}
+.resource-panel-heading > :last-child {
+  font-family: var(--font-presentation-outfit), var(--font-sans);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.studio-resource-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 0 14px 14px;
+  padding: 5px;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.studio-resource-tabs button {
+  padding: 10px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: var(--radius-md);
+  color: var(--color-fg-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.studio-resource-tabs button:hover {
+  background: var(--color-surface-1);
+}
+.studio-resource-tabs button[aria-selected="true"] {
+  background: var(--color-surface-3);
+  color: var(--color-primary-hover);
+}
+.resource-tab-icon {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+}
+.resource-panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 20px 20px;
+  border-top: 1px solid var(--color-border);
+}
+.text-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 16px;
+}
+.editor-heading h2 {
+  margin-block: 5px;
+  font-family: var(--font-presentation-outfit), var(--font-sans);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+.draft-preview {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.draft-preview-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 9px 11px;
+  font-size: 9px;
+  color: var(--color-fg-muted);
+  background: var(--color-surface-1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.draft-preview-label > :first-child {
+  color: var(--color-primary-hover);
+}
+.draft-preview-canvas {
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--color-output-black);
+}
+.draft-preview-canvas > p {
+  padding: 35px 18px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--color-fg-muted);
+}
+.segmented-control {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.segmented-control button {
+  flex: 1;
+  padding: 7px 5px;
+  border-radius: var(--radius-sm);
+  color: var(--color-fg-muted);
+  font-size: 11px;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+.segmented-control button[aria-pressed="true"] {
+  color: var(--color-fg-default);
+  background: var(--color-surface-3);
+  box-shadow: var(--shadow-sm);
+}
+.template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.template-grid button {
+  text-align: left;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-1);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.template-grid button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+}
+.template-grid span {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+}
+.template-grid small {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-fg-subtle);
+  font-size: 9px;
+  line-height: 1.5;
+}
+.editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.editor-textarea {
+  line-height: 1.7;
+  resize: vertical;
+  min-height: 120px;
+}
+.editor-help {
+  color: var(--color-fg-subtle);
+  font-size: 10px;
+  line-height: 1.7;
+}
+.editor-two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.editor-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+.typography-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.type-size-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.type-size-row output {
+  font-size: 11px;
+  color: var(--color-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.editor-range {
+  width: 100%;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+.italic-toggle {
+  align-self: end;
+  min-height: 42px;
+}
+.italic-toggle em {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  padding-right: 5px;
+}
+.italic-toggle[aria-pressed="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-hover);
+}
+.colour-swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.colour-swatch {
+  display: grid;
+  place-items: center;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-strong);
+  cursor: pointer;
+}
+.colour-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--color-primary-hover);
+  outline-offset: 2px;
+}
+.colour-swatch span:not(:empty) {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  color: var(--color-output-white);
+  background: var(--color-bg-base);
+  font-size: 10px;
+}
+.editor-divider {
+  height: 1px;
+  margin-block: 6px;
+  background: var(--color-border);
+}
+.editor-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 45px 15px;
+  text-align: center;
+}
+.editor-empty > span {
+  font-family: var(--font-presentation-lora), serif;
+  font-size: 44px;
+  color: var(--color-primary-hover);
+}
+.editor-empty h2 {
+  font-size: 17px;
+  font-weight: 500;
+}
+.editor-empty p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--color-fg-muted);
+}
+.workspace-heading h1 {
+  font-family: var(--font-presentation-outfit), var(--font-sans);
+  font-size: 26px;
+  font-weight: 500;
+}
+.monitor-frame {
+  box-shadow: var(--shadow-md);
+}
+.slide-tile {
+  min-height: 145px;
+  border-radius: var(--radius-lg);
+}
+.operator-topbar {
+  gap: 14px;
+}
+.panel-toggles button[aria-pressed="true"] { background: var(--color-primary-subtle); border-color: var(--color-border-focus); color: var(--color-primary-hover); }
+@media (max-width: 1050px) {
+  .resource-panel-heading {
+    padding: 14px 16px 10px;
+  }
+  .resource-panel-scroll {
+    padding-inline: 14px;
+  }
+}

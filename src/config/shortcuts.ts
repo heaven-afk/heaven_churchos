@@ -16,9 +16,35 @@
  *   'meta+shift+l'    — Cmd/Win + Shift + L
  */
 
-import type { PresentationAction } from '@/actions/presentation.actions';
+import type { PresentationAction } from "@/actions/presentation.actions";
 
-export type ShortcutContext = 'global' | 'operator' | 'scripture' | 'lyrics';
+export function normaliseShortcutKey(
+  event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">
+): string {
+  const parts: string[] = [];
+  if (event.ctrlKey) parts.push("ctrl");
+  if (event.metaKey) parts.push("meta");
+  if (event.altKey) parts.push("alt");
+  if (event.shiftKey) parts.push("shift");
+  parts.push(event.key === " " ? "space" : event.key.toLowerCase());
+  return parts.join("+");
+}
+
+/** Native controls own text input and activation keys; emergency letters remain global. */
+export function shouldIgnoreShortcutTarget(
+  key: string,
+  tagName: string,
+  editable: boolean,
+  insideControl: boolean
+): boolean {
+  return (
+    editable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(tagName) ||
+    (insideControl && ["enter", "space"].includes(key))
+  );
+}
+
+export type ShortcutContext = "global" | "operator" | "scripture" | "lyrics";
 
 export interface ShortcutBinding {
   /** The key combination string */
@@ -36,98 +62,98 @@ export interface ShortcutBinding {
 const SHORTCUTS: ShortcutBinding[] = [
   // ── Navigation ────────────────────────────────────────────────────────────
   {
-    key: 'arrowright',
-    action: { type: 'NEXT_SLIDE' },
-    description: 'Next slide',
-    context: 'operator',
+    key: "arrowright",
+    action: { type: "NEXT_SLIDE" },
+    description: "Next slide",
+    context: "operator",
     preventDefault: true,
   },
   {
-    key: 'arrowdown',
-    action: { type: 'NEXT_SLIDE' },
-    description: 'Next slide',
-    context: 'operator',
+    key: "arrowdown",
+    action: { type: "NEXT_SLIDE" },
+    description: "Next slide",
+    context: "operator",
     preventDefault: true,
   },
   {
-    key: 'space',
-    action: { type: 'NEXT_SLIDE' },
-    description: 'Next slide',
-    context: 'operator',
+    key: "space",
+    action: { type: "NEXT_SLIDE" },
+    description: "Next slide",
+    context: "operator",
     preventDefault: true,
   },
   {
-    key: 'arrowleft',
-    action: { type: 'PREVIOUS_SLIDE' },
-    description: 'Previous slide',
-    context: 'operator',
+    key: "arrowleft",
+    action: { type: "PREVIOUS_SLIDE" },
+    description: "Previous slide",
+    context: "operator",
     preventDefault: true,
   },
   {
-    key: 'arrowup',
-    action: { type: 'PREVIOUS_SLIDE' },
-    description: 'Previous slide',
-    context: 'operator',
+    key: "arrowup",
+    action: { type: "PREVIOUS_SLIDE" },
+    description: "Previous slide",
+    context: "operator",
     preventDefault: true,
   },
   {
-    key: 'enter',
-    action: { type: 'SEND_LIVE' },
-    description: 'Send staged slide live',
-    context: 'operator',
+    key: "enter",
+    action: { type: "SEND_LIVE" },
+    description: "Send staged slide live",
+    context: "operator",
     preventDefault: true,
   },
 
   // ── Emergency Controls ────────────────────────────────────────────────────
   {
-    key: 'b',
-    action: { type: 'BLACK_SCREEN' },
-    description: 'Black screen',
-    context: 'operator',
+    key: "b",
+    action: { type: "BLACK_SCREEN" },
+    description: "Black screen",
+    context: "operator",
     preventDefault: false,
   },
   {
-    key: 'c',
-    action: { type: 'CLEAR_OUTPUT' },
-    description: 'Clear output',
-    context: 'operator',
+    key: "c",
+    action: { type: "CLEAR_OUTPUT" },
+    description: "Clear output",
+    context: "operator",
     preventDefault: false,
   },
   {
-    key: 'f',
-    action: { type: 'FREEZE_OUTPUT' },
-    description: 'Freeze output',
-    context: 'operator',
+    key: "f",
+    action: { type: "FREEZE_OUTPUT" },
+    description: "Freeze output",
+    context: "operator",
     preventDefault: false,
   },
 
   // ── Scripture / Lyrics context ────────────────────────────────────────────
   {
-    key: 'arrowright',
-    action: { type: 'NEXT_SLIDE' },
-    description: 'Next verse / line',
-    context: 'scripture',
+    key: "arrowright",
+    action: { type: "NEXT_SLIDE" },
+    description: "Next verse / line",
+    context: "scripture",
     preventDefault: true,
   },
   {
-    key: 'arrowleft',
-    action: { type: 'PREVIOUS_SLIDE' },
-    description: 'Previous verse / line',
-    context: 'scripture',
+    key: "arrowleft",
+    action: { type: "PREVIOUS_SLIDE" },
+    description: "Previous verse / line",
+    context: "scripture",
     preventDefault: true,
   },
   {
-    key: 'arrowright',
-    action: { type: 'NEXT_SLIDE' },
-    description: 'Next lyric line',
-    context: 'lyrics',
+    key: "arrowright",
+    action: { type: "NEXT_SLIDE" },
+    description: "Next lyric line",
+    context: "lyrics",
     preventDefault: true,
   },
   {
-    key: 'arrowleft',
-    action: { type: 'PREVIOUS_SLIDE' },
-    description: 'Previous lyric line',
-    context: 'lyrics',
+    key: "arrowleft",
+    action: { type: "PREVIOUS_SLIDE" },
+    description: "Previous lyric line",
+    context: "lyrics",
     preventDefault: true,
   },
 ];

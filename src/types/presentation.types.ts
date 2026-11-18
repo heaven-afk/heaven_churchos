@@ -41,6 +41,7 @@ export interface Background {
 // ─── Slides ──────────────────────────────────────────────────────────────────
 
 export interface PresentationSlide {
+  typography?: import('./text-style.types').SlideTypography;
   id: string;
   title?: string;
   text: string;

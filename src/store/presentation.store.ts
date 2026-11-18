@@ -22,12 +22,16 @@ import type {
   TransitionType,
 } from "@/types/presentation.types";
 import { broadcastPresentationState } from "@/lib/presentation/sync";
+import type { SlideAppearance } from "@/types/text-style.types";
+import { applySlideAppearance } from "@/lib/presentation/typography";
 
 export interface PresentationState extends OutputState {
   slides: PresentationSlide[];
   liveSlides: PresentationSlide[];
   liveSlideIndex: number;
   previewSlideIndex: number;
+  sourceItemId: string | null;
+  stylePreview: (appearance: SlideAppearance) => void;
 
   sendLive: (slide?: PresentationSlide) => void;
   setPreview: (slide: PresentationSlide | null) => void;
@@ -38,7 +42,7 @@ export interface PresentationState extends OutputState {
   setLayoutOverride: (layoutId: LayoutId | null) => void;
   setBackgroundOverride: (background: Background | null) => void;
   showLowerThird: (text: string, subtext?: string) => void;
-  setSlides: (slides: PresentationSlide[]) => void;
+  setSlides: (slides: PresentationSlide[], sourceItemId?: string) => void;
   setStageAlert: (alert: StageAlert) => void;
   dismissStageAlert: () => void;
   setTransition: (type: TransitionType, durationMs?: number) => void;
@@ -72,6 +76,15 @@ export const usePresentationStore = create<PresentationState>((set, get) => ({
   liveSlides: [],
   liveSlideIndex: -1,
   previewSlideIndex: -1,
+  sourceItemId: null,
+  stylePreview: (appearance) => {
+    const s = get();
+    const slides = applySlideAppearance(s.slides, appearance);
+    const previewSlide =
+      slides.find((slide) => slide.id === s.previewSlide?.id) ??
+      (s.previewSlide ? { ...s.previewSlide, ...appearance } : null);
+    set({ slides, previewSlide });
+  },
 
   sendLive: (slide) => {
     const s = get();
@@ -263,9 +276,10 @@ export const usePresentationStore = create<PresentationState>((set, get) => ({
     });
   },
 
-  setSlides: (slides) => {
+  setSlides: (slides, sourceItemId) => {
     set({
       slides,
+      sourceItemId: sourceItemId ?? null,
       previewSlideIndex: slides.length > 0 ? 0 : -1,
       previewSlide: slides[0] ?? null,
     });

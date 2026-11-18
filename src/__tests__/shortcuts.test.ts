@@ -3,9 +3,33 @@
  */
 
 import { describe, it, expect } from "vitest";
-import SHORTCUTS, { findShortcut, getShortcutsByContext } from "@/config/shortcuts";
+import SHORTCUTS, {
+  findShortcut,
+  getShortcutsByContext,
+  normaliseShortcutKey,
+  shouldIgnoreShortcutTarget,
+} from "@/config/shortcuts";
 
 describe("Shortcut Configuration", () => {
+  it("normalizes browser Space events to the configured next-slide shortcut", () => {
+    const key = normaliseShortcutKey({
+      key: " ",
+      ctrlKey: false,
+      metaKey: false,
+      altKey: false,
+      shiftKey: false,
+    });
+    expect(findShortcut(key, "operator")?.action.type).toBe("NEXT_SLIDE");
+  });
+
+  it("keeps typography controls from triggering take-live or navigation while editing", () => {
+    expect(shouldIgnoreShortcutTarget("enter", "BUTTON", false, true)).toBe(true);
+    expect(shouldIgnoreShortcutTarget("space", "SPAN", false, true)).toBe(true);
+    expect(shouldIgnoreShortcutTarget("arrowright", "INPUT", false, false)).toBe(true);
+    expect(shouldIgnoreShortcutTarget("arrowdown", "SELECT", false, false)).toBe(true);
+    expect(shouldIgnoreShortcutTarget("b", "BUTTON", false, true)).toBe(false);
+    expect(shouldIgnoreShortcutTarget("enter", "MAIN", false, false)).toBe(false);
+  });
   it("has at least one shortcut defined", () => {
     expect(SHORTCUTS.length).toBeGreaterThan(0);
   });

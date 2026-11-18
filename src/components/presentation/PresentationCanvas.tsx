@@ -127,7 +127,7 @@ export function PresentationCanvas({
   return (
     <div
       className={`relative flex h-full w-full items-center justify-center overflow-hidden select-none ${className}`}
-      style={getRootBackground()}
+      style={{ ...getRootBackground(), containerType: "inline-size" }}
       role="region"
       aria-label={`${targetConfig.name} presentation output`}
       aria-live="polite"

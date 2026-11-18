@@ -13,6 +13,21 @@
 /* ─── Semantic Colors ─────────────────────────────────────────────── */
 
 :root {
+  /* Presentation palette: shared by the editor and every audience output. */
+  --color-type-white: #ffffff;
+  --color-type-ivory: #f2ead8;
+  --color-type-gold: #f5cc72;
+  --color-type-sky: #9cc9ff;
+  --color-type-mint: #9de0c3;
+  --color-type-rose: #f4a9bc;
+  --color-type-lavender: #c6b5f7;
+  --color-type-slate: #526078;
+  --color-type-navy: #142338;
+  --color-type-black: #000000;
+  --color-content-scrim: rgba(0 0 0 / 0.42);
+  --color-caption-surface: rgba(10 14 24 / 0.88);
+  --color-lower-third-gradient: linear-gradient(to top, rgba(0 0 0 / 0.94), rgba(0 0 0 / 0.7) 70%, transparent);
+  --shadow-presentation-text: 0 2px 8px rgba(0 0 0 / 0.45);
   /* Background hierarchy */
   --color-bg-base:      #0a0b0d;
   --color-bg-elevated:  #111318;

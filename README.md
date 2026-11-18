@@ -1,5 +1,12 @@
 # Heaven Church OS
 
+Text editing: open **Text → Write** for content and **Type & colour** for heading,
+body and footer fonts, sizes, colours, weight, italic and line spacing. Preview
+updates as you edit; use Take live to change program. Select a saved text item and
+choose Edit to update it. For prepared songs or Scripture, use **Design** or the
+**Style preview** button, then save the style to the service item when desired.
+Inter, Outfit and Lora are self-hosted Google Fonts; notices are in `public/fonts/`.
+
 Repository: [heaven-afk/heaven_churchos](https://github.com/heaven-afk/heaven_churchos).
 For Vercel import settings, environment variables and hosted feature limits, see
 [DEPLOYMENT.md](DEPLOYMENT.md). Run `npm run check:deploy` before deploying.

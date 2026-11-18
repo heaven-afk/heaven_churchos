@@ -28,6 +28,8 @@ export function TopBar() {
   const router = useRouter();
   const toggleService = useUIStore(s => s.toggleServicePanel);
   const toggleResources = useUIStore(s => s.toggleControlPanel);
+  const serviceOpen = useUIStore(s => s.isServicePanelOpen);
+  const resourcesOpen = useUIStore(s => s.isControlPanelOpen);
 
   const currentService = useServiceStore((s) => s.currentService);
   const syncStatus = useServiceStore((s) => s.syncStatus);
@@ -164,7 +166,7 @@ export function TopBar() {
         )}
       </div>
 
-      <div className="panel-toggles"><button className="operator-chip" onClick={toggleService}>Service</button><button className="operator-chip" onClick={toggleResources}>Resources</button></div>
+      <div className="panel-toggles"><button className="operator-chip" aria-pressed={serviceOpen} onClick={toggleService}>Service</button><button className="operator-chip" aria-pressed={resourcesOpen} onClick={toggleResources}>Resources</button></div>
       {/* Slide Transition Selector (Phase 2 WS3) */}
       <TransitionPicker />
 

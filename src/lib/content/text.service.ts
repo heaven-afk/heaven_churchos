@@ -6,26 +6,36 @@
  */
 
 import type { ServiceItem } from "@/types/service.types";
-import type {
-  PresentationSlide,
-  LayoutId,
-  Background,
-} from "@/types/presentation.types";
+import type { PresentationSlide, Background } from "@/types/presentation.types";
+import type { CreateTextOptions } from "@/types/text-style.types";
+import { isSlideTypography } from "@/lib/presentation/typography";
+export type { CreateTextOptions } from "@/types/text-style.types";
 
-export interface CreateTextOptions {
-  title?: string;
-  body: string;
-  subtext?: string;
-  layout?: LayoutId;
-  background?: Background;
-  textAlign?: "left" | "center" | "right";
+export function getTextOptions(content: unknown): CreateTextOptions | null {
+  if (
+    !content ||
+    typeof content !== "object" ||
+    !("body" in content) ||
+    typeof content.body !== "string"
+  )
+    return null;
+  const options = content as CreateTextOptions;
+  return {
+    body: options.body,
+    title: typeof options.title === "string" ? options.title : undefined,
+    subtext: typeof options.subtext === "string" ? options.subtext : undefined,
+    layout: options.layout,
+    textAlign: options.textAlign,
+    background: options.background,
+    typography: isSlideTypography(options.typography) ? options.typography : undefined,
+  };
 }
 
 const DEFAULT_BACKGROUND: Background = {
   id: "default-black",
   type: "color",
   name: "Solid Black",
-  value: "#000000",
+  value: "var(--color-type-black)",
 };
 
 /**
@@ -42,6 +52,7 @@ export function createTextPresentationSlides(
     layout = "full-screen",
     background = DEFAULT_BACKGROUND,
     textAlign = "center",
+    typography,
   } = options;
 
   if (!body.trim() && !title?.trim()) return [];
@@ -63,6 +74,7 @@ export function createTextPresentationSlides(
     layout,
     background,
     textAlign,
+    typography,
   }));
 }
 
@@ -75,7 +87,8 @@ export function createTextServiceItem(
 ): ServiceItem {
   const now = new Date().toISOString();
   const slides = createTextPresentationSlides(options);
-  const title = options.title?.trim() || options.body.trim().split("\n")[0] || "Text Slide";
+  const title =
+    options.title?.trim() || options.body.trim().split("\n")[0] || "Text Slide";
 
   return {
     id: `item-text-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,

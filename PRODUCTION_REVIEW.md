@@ -7,6 +7,24 @@ The browser workstation and same-browser outputs can be hosted without Supabase;
 this does not qualify cloud account/tenant flows. Hosted OBS guidance uses Window
 Capture, and the in-memory relay is explicitly disabled in Vercel environments.
 
+Text studio update, 18 November 2026: text items now support editable fonts, size,
+token-palette colours, weight, italic, line spacing, alignment and backgrounds.
+Heading/body/footer controls are independent. Existing text items can be reopened
+and edited. Drafts and prepared appearance changes remain separate from program.
+The Design panel styles prepared Scripture/lyrics and can save item-wide appearance.
+Operator startup now restores saved services. Font licenses accompany the app.
+
+Text studio validation: `npm run check:deploy` passed TypeScript, lint, 127 tests
+across 22 files, and the Vercel-mode production build. Browser checks confirmed
+Lora font loading, size/colour editing, distinct preview/program colours while
+editing, saving and reopening after reload, editing existing text, and styled
+transparent livestream output. The desktop studio was inspected at 1440px width.
+Actual native OBS recording remains part of hardware acceptance.
+
+Keyboard hardening: formatting controls keep native Enter/Space activation and
+input navigation without sending presentation commands. Browser Space events are
+normalized to the central shortcut map; emergency letter shortcuts remain global.
+
 ## Release assessment
 
 This is a significantly improved local presentation candidate, not yet a fully

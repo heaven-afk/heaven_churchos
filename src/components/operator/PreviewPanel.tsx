@@ -40,8 +40,8 @@ export function PreviewPanel() {
     <div className="presentation-workspace">
       <div className="workspace-heading">
         <div>
-          <p className="eyebrow">Operator workstation</p>
-          <h1>Ready for the next moment.</h1>
+          <p className="eyebrow">Prepare · preview · present</p>
+          <h1>Presentation studio</h1>
         </div>
         <span className={`workspace-state ${status === "live" ? "is-live" : ""}`}>
           {status === "live" ? "● Live output" : `Output ${status}`}
@@ -51,7 +51,17 @@ export function PreviewPanel() {
         <section className="monitor-section" aria-label="Staged preview">
           <div className="monitor-heading">
             <span className="preview-label">Preview</span>
-            <span>Only you can see this</span>
+            <button
+              type="button"
+              className="operator-chip"
+              onClick={() => {
+                setTab("layout");
+                if (!useUIStore.getState().isControlPanelOpen)
+                  useUIStore.getState().toggleControlPanel();
+              }}
+            >
+              Aa · Style preview
+            </button>
           </div>
           <div className="monitor-frame preview-frame">
             {previewSlide ? (

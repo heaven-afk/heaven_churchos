@@ -3,6 +3,24 @@
 Current working display name: Heaven Church OS (`src/config/brand.ts`). See
 `PRODUCTION_REVIEW.md` for release qualification, OBS setup and known limits.
 
+### Typography and text studio (18 November 2026)
+
+`PresentationSlide.typography` carries validated heading/body/footer styles using
+font and colour IDs. Font families and CSS-token colours are resolved centrally
+in `src/config/typography.ts`; canvas-relative font sizes keep operator previews
+and output windows in proportion. Congregation and livestream share the renderer;
+stage monitors retain their confidence layout. Inter, Outfit and Lora are loaded
+through next/font and self-hosted, with OFL notices in `public/fonts/licenses/`.
+
+`STYLE_PREVIEW` changes prepared slides only, through presentation actions. Live
+slides/queues remain immutable until explicit take-live. Styles travel with the
+slide over both browser and local OBS synchronization and are validated on receipt.
+Saved service styles are also embedded as `content.presentationAppearance`, so
+the existing JSON cloud schema can retain them without a database migration.
+The Text studio edits saved text items, preserves drafts across resource tabs,
+and stores typography with their text options and generated slides. Operator
+startup restores the authenticated organization and its saved service list.
+
 ### Local output and Scripture hardening (17 November 2026)
 
 `slides` is the prepared queue; `liveSlides` is captured on take-live. Preparation

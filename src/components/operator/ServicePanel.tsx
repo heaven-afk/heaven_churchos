@@ -9,8 +9,10 @@ import type { Scripture, Song } from "@/types/content.types";
 import type { MediaItem } from "@/types/media.types";
 import type { PresentationSlide } from "@/types/presentation.types";
 import { songToPresentationSlides } from "@/lib/lyrics/lyric.service";
-import { createTextPresentationSlides } from "@/lib/content/text.service";
+import { createTextPresentationSlides, getTextOptions } from "@/lib/content/text.service";
+import type { TextServiceContent } from '@/types/text-style.types';
 import { createMediaPresentationSlide } from "@/lib/content/media.service";
+import { applySlideAppearance, getItemAppearance } from "@/lib/presentation/typography";
 import { ServiceModal } from "./ServiceModal";
 
 const ITEM_TYPE_ICONS: Record<string, string> = {
@@ -55,7 +57,7 @@ export function ServicePanel() {
   return (
     <>
       <aside
-        className="flex flex-col border-r overflow-hidden shrink-0"
+        className="flex shrink-0 flex-col overflow-hidden border-r"
         style={{
           width: "var(--panel-service-width)",
           background: "var(--color-bg-elevated)",
@@ -66,78 +68,78 @@ export function ServicePanel() {
       >
         {/* Panel header */}
         <div
-          className="flex items-center justify-between px-3 py-2.5 border-b gap-2"
+          className="flex items-center justify-between gap-2 border-b px-3 py-2.5"
           style={{ borderColor: "var(--color-border)" }}
         >
           <button
             onClick={() => setIsServiceModalOpen(true)}
-            className="flex items-center gap-1.5 min-w-0 flex-1 text-left rounded p-1 hover:bg-white/5 transition-colors cursor-pointer group"
+            className="group flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded p-1 text-left transition-colors hover:bg-white/5"
             title="Switch or create service"
             aria-label="Switch or create service"
           >
             <span
-              className="text-xs font-semibold uppercase tracking-wider truncate block"
+              className="block truncate text-xs font-semibold tracking-wider uppercase"
               style={{ color: "var(--color-fg-default)" }}
             >
               {currentService ? currentService.title : "Service"}
             </span>
             <span
-              className="text-[10px] shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"
+              className="shrink-0 text-[10px] opacity-60 transition-opacity group-hover:opacity-100"
               style={{ color: "var(--color-primary)" }}
             >
               ▾
             </span>
           </button>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5">
             {/* Sync status indicator */}
             <span
-              className="text-[11px] select-none flex items-center gap-1 px-1.5 py-0.5 rounded"
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] select-none"
               style={{
                 color:
                   syncStatus === "synced"
                     ? "var(--color-success)"
                     : syncStatus === "error"
-                    ? "var(--color-warning)"
-                    : "var(--color-fg-subtle)",
+                      ? "var(--color-warning)"
+                      : "var(--color-fg-subtle)",
                 background: "var(--color-surface-1)",
               }}
               title={
                 syncStatus === "synced"
                   ? "Changes synced to cloud"
                   : syncStatus === "syncing"
-                  ? "Saving changes..."
-                  : syncStatus === "error"
-                  ? "Saved locally (cloud offline)"
-                  : "Saved locally"
+                    ? "Saving changes..."
+                    : syncStatus === "error"
+                      ? "Saved locally (cloud offline)"
+                      : "Saved locally"
               }
             >
               <span
-                className="w-1.5 h-1.5 rounded-full"
+                className="h-1.5 w-1.5 rounded-full"
                 style={{
                   background:
                     syncStatus === "synced"
                       ? "var(--color-success)"
                       : syncStatus === "syncing"
-                      ? "var(--color-primary)"
-                      : syncStatus === "error"
-                      ? "var(--color-warning)"
-                      : "var(--color-fg-muted)",
+                        ? "var(--color-primary)"
+                        : syncStatus === "error"
+                          ? "var(--color-warning)"
+                          : "var(--color-fg-muted)",
                 }}
               />
-              <span className="text-[10px] font-medium uppercase tracking-wider">
+              <span className="text-[10px] font-medium tracking-wider uppercase">
                 {syncStatus === "synced"
                   ? "Cloud"
                   : syncStatus === "syncing"
-                  ? "Saving"
-                  : "Local"}
+                    ? "Saving"
+                    : "Local"}
               </span>
             </span>
 
             <button
               id="btn-add-item"
               onClick={handleAddClick}
-              className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors cursor-pointer"
+              className="flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors"
               style={{
                 color: "var(--color-primary)",
                 background: "var(--color-primary-subtle)",
@@ -153,7 +155,7 @@ export function ServicePanel() {
         {/* User-friendly Error Banner (§7.7) */}
         {error && (
           <div
-            className="flex items-center justify-between px-3 py-1.5 text-xs border-b gap-2"
+            className="flex items-center justify-between gap-2 border-b px-3 py-1.5 text-xs"
             style={{
               background: "var(--color-warning-subtle)",
               borderColor: "var(--color-border)",
@@ -163,7 +165,7 @@ export function ServicePanel() {
             <span className="truncate">{error}</span>
             <button
               onClick={() => setError(null)}
-              className="font-bold hover:opacity-80 p-0.5 cursor-pointer"
+              className="cursor-pointer p-0.5 font-bold hover:opacity-80"
               aria-label="Dismiss error notice"
             >
               ✕
@@ -172,11 +174,7 @@ export function ServicePanel() {
         )}
 
         {/* Item list */}
-        <div
-          className="flex-1 overflow-y-auto"
-          role="list"
-          aria-label="Service items"
-        >
+        <div className="flex-1 overflow-y-auto" role="list" aria-label="Service items">
           {isLoading ? (
             <ServicePanelSkeleton />
           ) : items.length === 0 ? (
@@ -210,23 +208,23 @@ export function ServicePanel() {
 
 function ServicePanelSkeleton() {
   return (
-    <div className="p-3 space-y-2.5 animate-pulse">
+    <div className="animate-pulse space-y-2.5 p-3">
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="h-10 rounded-lg flex items-center gap-3 px-3"
+          className="flex h-10 items-center gap-3 rounded-lg px-3"
           style={{ background: "var(--color-surface-1)" }}
         >
           <div
-            className="w-4 h-4 rounded"
+            className="h-4 w-4 rounded"
             style={{ background: "var(--color-surface-2)" }}
           />
           <div
-            className="h-3 rounded flex-1"
+            className="h-3 flex-1 rounded"
             style={{ background: "var(--color-surface-2)" }}
           />
           <div
-            className="w-6 h-3 rounded"
+            className="h-3 w-6 rounded"
             style={{ background: "var(--color-surface-2)" }}
           />
         </div>
@@ -240,27 +238,21 @@ function ServicePanelSkeleton() {
 function ServicePanelEmptyState({ hasService }: { hasService: boolean }) {
   return (
     <div
-      className="flex flex-col items-center justify-center h-full px-4 text-center gap-3 py-12"
+      className="flex h-full flex-col items-center justify-center gap-3 px-4 py-12 text-center"
       style={{ color: "var(--color-fg-muted)" }}
     >
       <div
-        className="h-10 w-10 rounded-xl flex items-center justify-center text-xl"
+        className="flex h-10 w-10 items-center justify-center rounded-xl text-xl"
         style={{ background: "var(--color-surface-1)" }}
         aria-hidden="true"
       >
         {hasService ? "📭" : "📋"}
       </div>
       <div>
-        <p
-          className="text-sm font-medium"
-          style={{ color: "var(--color-fg-default)" }}
-        >
+        <p className="text-sm font-medium" style={{ color: "var(--color-fg-default)" }}>
           {hasService ? "No items in rundown" : "No service open"}
         </p>
-        <p
-          className="text-xs mt-1"
-          style={{ color: "var(--color-fg-subtle)" }}
-        >
+        <p className="mt-1 text-xs" style={{ color: "var(--color-fg-subtle)" }}>
           {hasService
             ? "Add songs or Scripture from the control panel."
             : "Create or open a service to begin."}
@@ -291,6 +283,13 @@ function ServiceItemRow({
 
   const handleSelect = () => {
     selectItem(item.id);
+    const stage = (slides: PresentationSlide[]) => {
+      dispatch({
+        type: "SET_SLIDES",
+        slides: applySlideAppearance(slides, getItemAppearance(item)),
+        sourceItemId: item.id,
+      });
+    };
     if (item.type === "scripture" && item.content) {
       const scripture = item.content as Scripture;
       if (Array.isArray(scripture.slides) && scripture.slides.length > 0) {
@@ -308,39 +307,24 @@ function ServiceItemRow({
             },
           })
         );
-        dispatch({ type: "SET_SLIDES", slides: presentationSlides });
-        dispatch({ type: "SET_PREVIEW", slide: presentationSlides[0] });
+        stage(presentationSlides);
       }
     } else if (item.type === "song" && item.content) {
       const song = item.content as Song;
       const presentationSlides = songToPresentationSlides(song);
       if (presentationSlides.length > 0) {
-        dispatch({ type: "SET_SLIDES", slides: presentationSlides });
-        dispatch({ type: "SET_PREVIEW", slide: presentationSlides[0] });
+        stage(presentationSlides);
       }
     } else if (item.type === "text" && item.content) {
-      const textContent = item.content as {
-        slides?: PresentationSlide[];
-        body?: string;
-        title?: string;
-        subtext?: string;
-      };
+      const textContent = item.content as TextServiceContent;
       const slides =
         textContent.slides && textContent.slides.length > 0
           ? textContent.slides
-          : createTextPresentationSlides({
-              title: textContent.title,
-              body: textContent.body || item.title,
-              subtext: textContent.subtext,
-            });
+          : createTextPresentationSlides(getTextOptions(item.content) ?? {body: item.title});
       if (slides.length > 0) {
-        dispatch({ type: "SET_SLIDES", slides });
-        dispatch({ type: "SET_PREVIEW", slide: slides[0] });
+        stage(slides);
       }
-    } else if (
-      (item.type === "image" || item.type === "video") &&
-      item.content
-    ) {
+    } else if ((item.type === "image" || item.type === "video") && item.content) {
       const mediaContent = item.content as {
         slides?: PresentationSlide[];
         media?: MediaItem;
@@ -349,11 +333,10 @@ function ServiceItemRow({
         mediaContent.slides && mediaContent.slides.length > 0
           ? mediaContent.slides
           : mediaContent.media
-          ? [createMediaPresentationSlide(mediaContent.media)]
-          : [];
+            ? [createMediaPresentationSlide(mediaContent.media)]
+            : [];
       if (slides.length > 0) {
-        dispatch({ type: "SET_SLIDES", slides });
-        dispatch({ type: "SET_PREVIEW", slide: slides[0] });
+        stage(slides);
       }
     }
   };
@@ -376,7 +359,7 @@ function ServiceItemRow({
   return (
     <div
       role="option"
-      className="flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-colors group relative"
+      className="group relative flex cursor-pointer items-center gap-2.5 px-3 py-2 transition-colors"
       style={{
         background: isSelected ? "var(--color-primary-subtle)" : "transparent",
         borderLeft: isSelected
@@ -385,40 +368,58 @@ function ServiceItemRow({
       }}
       onClick={handleSelect}
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && handleSelect()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.stopPropagation();
+          handleSelect();
+        }
+      }}
       aria-selected={isSelected}
       aria-label={`${item.title}, item ${index + 1}`}
     >
-      <span className="text-sm select-none shrink-0" aria-hidden="true">
+      <span className="shrink-0 text-sm select-none" aria-hidden="true">
         {ITEM_TYPE_ICONS[item.type] ?? "⭐"}
       </span>
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <p
-          className="text-xs truncate font-medium"
+          className="truncate text-xs font-medium"
           style={{
-            color: isSelected
-              ? "var(--color-primary)"
-              : "var(--color-fg-default)",
+            color: isSelected ? "var(--color-primary)" : "var(--color-fg-default)",
           }}
         >
           {item.title}
         </p>
         <p
-          className="text-[10px] capitalize leading-none mt-0.5"
+          className="mt-0.5 text-[10px] leading-none capitalize"
           style={{ color: "var(--color-fg-subtle)" }}
         >
           {item.type}
         </p>
       </div>
 
+      {item.type === "text" && isSelected && (
+        <button
+          className="operator-chip"
+          aria-label={`Edit ${item.title}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSelect();
+            useUIStore.getState().setControlPanelTab("text");
+            if (!useUIStore.getState().isControlPanelOpen)
+              useUIStore.getState().toggleControlPanel();
+          }}
+        >
+          Edit
+        </button>
+      )}
       {/* Reorder & Remove Actions — visible on hover/focus */}
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0">
+      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
         <button
           type="button"
           onClick={handleMoveUp}
           disabled={isFirst}
-          className="p-1 rounded text-[10px] hover:bg-white/10 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+          className="cursor-pointer rounded p-1 text-[10px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-20"
           style={{ color: "var(--color-fg-muted)" }}
           title="Move item up"
           aria-label={`Move ${item.title} up`}
@@ -429,7 +430,7 @@ function ServiceItemRow({
           type="button"
           onClick={handleMoveDown}
           disabled={isLast}
-          className="p-1 rounded text-[10px] hover:bg-white/10 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+          className="cursor-pointer rounded p-1 text-[10px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-20"
           style={{ color: "var(--color-fg-muted)" }}
           title="Move item down"
           aria-label={`Move ${item.title} down`}
@@ -439,7 +440,7 @@ function ServiceItemRow({
         <button
           type="button"
           onClick={handleRemove}
-          className="p-1 rounded text-[10px] hover:bg-red-500/20 cursor-pointer"
+          className="cursor-pointer rounded p-1 text-[10px] hover:bg-red-500/20"
           style={{ color: "var(--color-error)" }}
           title="Remove item"
           aria-label={`Remove ${item.title}`}
@@ -450,7 +451,7 @@ function ServiceItemRow({
 
       {/* Deterministic Order Number */}
       <span
-        className="text-[10px] tabular-nums shrink-0 font-mono"
+        className="shrink-0 font-mono text-[10px] tabular-nums"
         style={{ color: "var(--color-fg-subtle)" }}
         aria-hidden="true"
       >
