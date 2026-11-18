@@ -21,7 +21,7 @@ interface StageRendererProps {
 export function StageRenderer({ liveSlide, nextSlide, status }: StageRendererProps) {
   const [clock, setClock] = useState("");
   const [elapsed, setElapsed] = useState(0);
-  const [startTime] = useState(Date.now());
+  const [startTime] = useState(() => Date.now());
 
   useEffect(() => {
     const tick = () => {

@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { PresentationPageClient } from "./PresentationPageClient";
 
 export const metadata: Metadata = {
-  title: "Presentation Output — Veyrin",
+  title: "Presentation Output",
+  referrer: "no-referrer",
 };
 
 /**
@@ -19,8 +20,8 @@ export const metadata: Metadata = {
  */
 export default function PresentationPage() {
   return (
-    <main className="h-screen w-screen overflow-hidden bg-black">
-      <Suspense fallback={<div className="h-screen w-screen bg-black" />}>
+    <main className="h-screen w-screen overflow-hidden">
+      <Suspense fallback={null}>
         <PresentationPageClient />
       </Suspense>
     </main>

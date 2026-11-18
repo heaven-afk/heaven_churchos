@@ -28,7 +28,7 @@ export function passageToPresentationSlides(
   }
 ): PresentationSlide[] {
   return passage.verses.map((verse) => ({
-    id: `scripture-${verse.book}-${verse.chapter}-${verse.verse}`,
+    id: `scripture-${passage.translation}-${verse.book}-${verse.chapter}-${verse.verse}`,
     text: verse.text,
     subtext: `${verse.verse}. ${passage.reference} (${passage.translation})`,
     layout,

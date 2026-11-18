@@ -2,6 +2,9 @@
   "name": "veyrin",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,7 +12,12 @@
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "start:local": "next start --hostname 127.0.0.1",
+    "dev:local": "next dev --hostname 127.0.0.1",
+    "bibles:prepare": "node scripts/prepare-bibles.mjs",
+    "verify:outputs": "node scripts/verify-local-output.mjs",
+    "check:deploy": "node scripts/check-deploy.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

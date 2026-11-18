@@ -1,0 +1,22 @@
+{
+  "translation": "Young's Literal Translation",
+  "abbreviation": "ylt",
+  "description": "Young's Literal Translation (1898)",
+  "lang": "en",
+  "language": "English",
+  "direction": "LTR",
+  "encoding": "",
+  "distribution_lcsh": "Bible. English.",
+  "distribution_version": "1.1",
+  "distribution_version_date": "2006-10-25",
+  "distribution_abbreviation": "ylt",
+  "distribution_about": "Young's Literal Translation\\par of the Holy Bible\\par by Robert Young, 1862, 1898\\par (Author of the Young's Analytical Concordance)\\par\\par Printed copy available from Baker Publishing\\par Grand Rapids, Mi. 49516",
+  "distribution_license": "Public Domain",
+  "distribution_sourcetype": "GBF",
+  "distribution_source": "",
+  "distribution_versification": "",
+  "distribution_history": {
+    "history_1.1": "Compressed the module.",
+    "history_1.0": "Initial release."
+  }
+}

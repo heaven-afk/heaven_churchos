@@ -1,6 +1,8 @@
 "use client";
 
 import { useKeyboard } from "@/hooks/useKeyboard";
+import { useEffect } from 'react';
+import { useSongStore } from '@/store/song.store';
 import { ServicePanel } from "./ServicePanel";
 import { ControlPanel } from "./ControlPanel";
 import { OutputMonitor } from "./OutputMonitor";
@@ -24,18 +26,19 @@ import { TopBar } from "./TopBar";
 export function OperatorShell({ children }: { children: React.ReactNode }) {
   // Register global keyboard handler once at the shell level
   useKeyboard();
+  useEffect(() => { void useSongStore.persist.rehydrate(); }, []);
 
   return (
     <div
-      className="flex h-screen flex-col overflow-hidden"
+      className="operator-shell flex h-dvh flex-col overflow-hidden"
       style={{ background: "var(--color-bg-base)" }}
     >
       <TopBar />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="operator-workspace flex flex-1 overflow-hidden">
         <ServicePanel />
         <main
-          className="flex-1 overflow-hidden"
+          className="min-w-0 flex-1 overflow-hidden"
           role="main"
           aria-label="Presentation preview"
         >

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { bibleProvider } from "@/providers/bible/web.provider";
 import { parseScriptureReference } from "@/lib/bible/reference-parser";
 import {
@@ -11,261 +11,214 @@ import { dispatch } from "@/actions/presentation.actions";
 import { useServiceStore } from "@/store/service.store";
 import type { BiblePassage, BibleTranslation } from "@/types/bible.types";
 
-const QUICK_PASSAGES = [
-  "John 3:16-18",
-  "Psalm 23",
-  "1 Cor 13:4-7",
-  "Romans 8:28",
-  "Gen 1:1-5",
-  "Matt 5:1-12",
-  "Phil 4:4-8",
-];
+const QUICK_PASSAGES = ["John 3:16-18", "Psalm 23", "Romans 8:28", "Gen 1:1-5"];
 
 export function ScripturePanel() {
   const [query, setQuery] = useState("John 3:16-18");
-  const [translation, setTranslation] = useState("WEB");
+  const [translation, setTranslation] = useState("KJV");
   const [translations, setTranslations] = useState<BibleTranslation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [passage, setPassage] = useState<BiblePassage | null>(null);
-
+  const [result, setResult] = useState<{ key: string; passage: BiblePassage } | null>(
+    null
+  );
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [retry, setRetry] = useState(0);
   const currentService = useServiceStore((s) => s.currentService);
   const setCurrentService = useServiceStore((s) => s.setCurrentService);
   const addItem = useServiceStore((s) => s.addItem);
+  const key = `${translation}:${query}`;
+  const passage = result?.key === key ? result.passage : null;
+  const selectedTranslation = translations.find((t) => t.id === translation);
 
-  // Load available translations
   useEffect(() => {
-    bibleProvider.getTranslations().then(setTranslations);
+    void bibleProvider.getTranslations().then(setTranslations);
   }, []);
-
-  // Resolve passage whenever query or translation changes
   useEffect(() => {
-    let isCancelled = false;
-
-    async function loadPassage() {
-      if (!query.trim()) {
-        setPassage(null);
-        return;
-      }
-
-      setIsLoading(true);
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      setError("");
       try {
         const parsed = parseScriptureReference(query);
-        if (parsed && parsed.isValid) {
-          const result = await bibleProvider.getPassage(
-            parsed.bookId,
-            parsed.chapter,
-            parsed.startVerse,
-            parsed.endVerse,
-            translation
-          );
-          if (!isCancelled) {
-            setPassage(result);
-          }
-        } else {
-          if (!isCancelled) setPassage(null);
+        if (!parsed?.isValid) {
+          if (!cancelled) setResult(null);
+          return;
         }
-      } catch (err) {
-        console.error("Failed to load scripture passage:", err);
-        if (!isCancelled) setPassage(null);
+        const passage = parsed.isFullChapter
+          ? {
+              reference: `${parsed.bookName} ${parsed.chapter}`,
+              translation,
+              verses: (
+                await bibleProvider.getChapter(parsed.bookId, parsed.chapter, translation)
+              ).verses,
+            }
+          : await bibleProvider.getPassage(
+              parsed.bookId,
+              parsed.chapter,
+              parsed.startVerse,
+              parsed.endVerse,
+              translation
+            );
+        if (!cancelled) setResult({ key, passage });
+      } catch (cause) {
+        if (!cancelled) {
+          setResult(null);
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Unable to load Scripture. Please try again."
+          );
+        }
       } finally {
-        if (!isCancelled) setIsLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    }
-
-    const timer = setTimeout(loadPassage, 150);
+    }, 150);
     return () => {
-      isCancelled = true;
+      cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, translation]);
+  }, [query, translation, key, retry]);
 
-  // Stage preview in operator window
-  const handleStagePreview = () => {
-    if (!passage || passage.verses.length === 0) return;
+  const prepare = (live = false) => {
+    if (!passage) return;
     const slides = passageToPresentationSlides(passage);
     dispatch({ type: "SET_SLIDES", slides });
-    dispatch({ type: "SET_PREVIEW", slide: slides[0] });
+    dispatch({ type: live ? "SEND_LIVE" : "SET_PREVIEW", slide: slides[0] });
   };
-
-  // Send directly to live presentation output
-  const handleSendLive = () => {
-    if (!passage || passage.verses.length === 0) return;
-    const slides = passageToPresentationSlides(passage);
-    dispatch({ type: "SET_SLIDES", slides });
-    dispatch({ type: "SEND_LIVE", slide: slides[0] });
-  };
-
-  // Add to the current service schedule
-  const handleAddToService = () => {
-    if (!passage || passage.verses.length === 0) return;
-
-    let targetService = currentService;
-    if (!targetService) {
-      targetService = {
-        id: `svc-${Date.now()}`,
+  const add = () => {
+    if (!passage) return;
+    let service = currentService;
+    if (!service) {
+      const now = new Date().toISOString();
+      service = {
+        id: crypto.randomUUID(),
         title: "Sunday Service",
-        date: new Date().toISOString().split("T")[0],
+        date: now.split("T")[0],
         items: [],
         organizationId: "org-default",
         isSynced: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       };
-      setCurrentService(targetService);
+      setCurrentService(service);
     }
-
-    const order = targetService.items.length;
-    const serviceItem = createScriptureServiceItem(passage, order);
-    addItem(serviceItem);
-
-    // Also stage in presentation store
-    handleStagePreview();
+    addItem(createScriptureServiceItem(passage, service.items.length));
+    prepare();
   };
 
   return (
-    <div className="flex flex-col gap-4 text-white/90">
-      {/* Search Input & Version Dropdown */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label
-            htmlFor="scripture-search-input"
-            className="text-xs font-semibold uppercase tracking-wider text-zinc-400"
-          >
-            Search Scripture
-          </label>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] uppercase text-zinc-500 font-mono">Version:</span>
-            <select
-              id="select-bible-translation"
-              value={translation}
-              onChange={(e) => setTranslation(e.target.value)}
-              className="text-xs px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-blue-400 font-semibold outline-none cursor-pointer"
-              aria-label="Bible translation version"
-            >
-              {translations.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.id} ({t.name})
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="relative">
-          <input
-            id="scripture-search-input"
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. John 3:16-18, Psalm 23, Romans 8:28..."
-            className="w-full px-3 py-2 rounded-lg bg-black/40 border text-sm text-white placeholder-zinc-500 outline-none focus:border-blue-500 transition-colors"
-            style={{ borderColor: "var(--color-border)" }}
-          />
-          {isLoading && (
-            <div className="absolute right-3 top-2.5 text-xs text-blue-400 animate-spin">
-              ◌
-            </div>
-          )}
-        </div>
+    <div className="resource-panel">
+      <div>
+        <h2 className="resource-title">Find Scripture</h2>
+        <p className="resource-description">
+          Search a reference, preview it, then take it live.
+        </p>
       </div>
-
-      {/* Quick Passage Chips */}
-      <div className="flex flex-wrap gap-1.5">
-        {QUICK_PASSAGES.map((qp) => (
-          <button
-            key={qp}
-            type="button"
-            onClick={() => setQuery(qp)}
-            className="text-[11px] px-2 py-0.5 rounded border border-zinc-700 bg-zinc-800/60 hover:bg-zinc-700 text-zinc-300 transition-colors"
-          >
-            {qp}
+      <label className="field-label" htmlFor="bible-translation">
+        Bible translation
+      </label>
+      <select
+        id="bible-translation"
+        className="operator-input"
+        value={translation}
+        onChange={(e) => setTranslation(e.target.value)}
+      >
+        {translations.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.abbreviation} · {t.name}
+          </option>
+        ))}
+      </select>
+      <label className="field-label" htmlFor="scripture-query">
+        Reference
+      </label>
+      <input
+        id="scripture-query"
+        className="operator-input"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="John 3:16–18 or Psalm 23"
+        autoComplete="off"
+        spellCheck={false}
+      />
+      <div className="flex flex-wrap gap-2">
+        {QUICK_PASSAGES.map((q) => (
+          <button key={q} className="operator-chip" onClick={() => setQuery(q)}>
+            {q}
           </button>
         ))}
       </div>
-
-      {/* Passage Results Preview Card */}
-      {passage && passage.verses.length > 0 ? (
-        <div
-          className="flex flex-col gap-2 p-3 rounded-lg border bg-black/30"
-          style={{ borderColor: "var(--color-border)" }}
-        >
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-            <span className="font-semibold text-sm text-blue-400">
-              {passage.reference}
-            </span>
-            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-950/60 border border-blue-800 text-blue-300 font-bold">
-              {passage.translation} · {passage.verses.length}{" "}
-              {passage.verses.length === 1 ? "verse" : "verses"}
+      <div aria-live="polite" aria-busy={loading}>
+        {error ? (
+          <div className="operator-notice" role="alert">
+            {error}{" "}
+            <button className="operator-chip" onClick={() => setRetry((n) => n + 1)}>
+              Retry
+            </button>
+          </div>
+        ) : !passage ? (
+          <p className="resource-description">
+            {loading
+              ? "Loading Scripture…"
+              : "Enter a book, chapter and optional verse range."}
+          </p>
+        ) : null}
+      </div>
+      {passage && (
+        <section className="scripture-result">
+          <div className="flex items-start justify-between gap-2">
+            <h3>{passage.reference}</h3>
+            <span className="operator-chip">
+              {translation} · {passage.verses.length} verses
             </span>
           </div>
-
-          <div className="max-h-48 overflow-y-auto pr-1 flex flex-col gap-2 text-xs leading-relaxed text-zinc-300">
+          <div className="scripture-verses" lang={selectedTranslation?.language}>
             {passage.verses.map((v) => (
-              <p key={`${v.chapter}-${v.verse}`}>
-                <strong className="text-zinc-500 mr-1.5 select-none">
-                  {v.verse}
-                </strong>
-                {v.text}
+              <p key={v.verse}>
+                <sup>{v.verse}</sup> {v.text}
               </p>
             ))}
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 pt-2 border-t border-zinc-800">
+          <div className="grid grid-cols-2 gap-2">
             <button
               id="btn-stage-scripture"
-              type="button"
-              onClick={handleStagePreview}
-              className="flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-colors border"
-              style={{
-                background: "var(--color-surface-2)",
-                color: "var(--color-fg-default)",
-                borderColor: "var(--color-border)",
-              }}
-              title="Preview without taking live"
+              className="operator-button"
+              onClick={() => prepare()}
             >
-              Stage Preview
+              Preview
             </button>
-
-            <button
-              id="btn-add-scripture"
-              type="button"
-              onClick={handleAddToService}
-              className="flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-colors border text-blue-400 hover:text-blue-300"
-              style={{
-                background: "var(--color-primary-subtle)",
-                borderColor: "var(--color-primary)",
-              }}
-              title="Add to Service Schedule"
-            >
-              + To Service
-            </button>
-
-            <button
-              id="btn-live-scripture"
-              type="button"
-              onClick={handleSendLive}
-              className="flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
-              style={{
-                background: "var(--color-primary)",
-                color: "var(--color-primary-fg)",
-              }}
-              title="Send live immediately"
-            >
-              Take Live ↗
+            <button id="btn-add-scripture" className="operator-button" onClick={add}>
+              + Add to service
             </button>
           </div>
-        </div>
-      ) : (
-        !isLoading && (
-          <div
-            className="p-4 rounded-lg border text-center text-xs text-zinc-500 bg-black/20"
-            style={{ borderColor: "var(--color-border)" }}
+          <button
+            id="btn-live-scripture"
+            className="operator-button primary"
+            onClick={() => prepare(true)}
           >
-            Enter a reference above (e.g. John 3:16) to load Scripture verses.
-          </div>
-        )
+            Take Scripture live ↗
+          </button>
+        </section>
       )}
+      {selectedTranslation && (
+        <p className="resource-description">
+          {selectedTranslation.attribution}{" "}
+          <a href={selectedTranslation.sourceUrl} target="_blank" rel="noreferrer">
+            Source &amp; license ↗
+          </a>
+        </p>
+      )}
+      <details className="translation-note">
+        <summary>Need NIV, Amplified or The Message?</summary>
+        <p>
+          These full translations require publisher licensing and are not installed. All
+          seven installed translations are served locally; no Bible API or internet
+          connection is needed during a service.
+        </p>
+        <a href="/bibles/LICENSES.md" target="_blank" rel="noreferrer">
+          Bible sources and permissions ↗
+        </a>
+      </details>
     </div>
   );
 }

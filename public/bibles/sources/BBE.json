@@ -1,0 +1,23 @@
+{
+  "translation": "Basic English Bible",
+  "abbreviation": "basicenglish",
+  "description": "1949/1964 Bible in Basic English",
+  "lang": "en",
+  "language": "English",
+  "direction": "LTR",
+  "encoding": "",
+  "distribution_lcsh": "Bible. English.",
+  "distribution_version": "1.3",
+  "distribution_version_date": "2008-04-21",
+  "distribution_abbreviation": "basicenglish",
+  "distribution_about": "1949/1964 Bible in Basic English\\par Public Domain -- Copy Freely\\par\\par The Bible In Basic English was printed in 1965 by Cambridge Press in England.  Published without any copyright notice and distributed in America, this work fell immediatly and irretrievably into the Public Domain in the United States according to the UCC convention of that time.  A call to Cambridge prior to placing this work in etext resulted in an admission of this fact.\\par\\par For more information about the text, see the file BBE.DOC which contains the printed introduction page.\\par\\par The most current and correct copies of these files can be obtained from the following.  If any errors are located, please ensure you have the latest files, and if so, we would appreciate being informed of the error.\\par\\par \tThe Bible Foundation\\par \thttp://www.bf.org\\par\\par Or by contacting:\\par \tMark Fuller\\par \t1129 East Loyola Drive\\par \tTempe, Arizona, 85282\\par \t602-829-8542 (voice)",
+  "distribution_license": "Public Domain",
+  "distribution_sourcetype": "OSIS",
+  "distribution_source": "Unbound Bible",
+  "distribution_versification": "",
+  "distribution_history": {
+    "history_1.3": "switched to Unbound Bible source and OSIS encoding",
+    "history_1.2": "compressed module",
+    "history_1.1": "minor correction to Rev 12:1"
+  }
+}

@@ -12,7 +12,7 @@ const LOCAL_STORAGE_AUTH_KEY = "veyrin_auth_session";
 
 export const DEFAULT_LOCAL_ORG: Organization = {
   id: "org-default",
-  name: "Grace Community Church",
+  name: "Local workstation",
   slug: "grace-community",
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -20,8 +20,8 @@ export const DEFAULT_LOCAL_ORG: Organization = {
 
 export const DEFAULT_LOCAL_USER: UserProfile = {
   id: "user-local-operator",
-  email: "operator@veyrin.local",
-  displayName: "Lead Operator",
+  email: "operator@localhost",
+  displayName: "Local operator",
   role: "OPERATOR",
   organizationId: DEFAULT_LOCAL_ORG.id,
   createdAt: new Date().toISOString(),
@@ -78,8 +78,10 @@ export class AuthService {
           };
         }
       } catch {
-        // Fall through to local
+        return null;
       }
+      // A configured cloud workspace may not recover an unverified local session.
+      return null;
     }
 
     // Local / offline session recovery

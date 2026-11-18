@@ -12,14 +12,14 @@ import type {
   BiblePassage,
   BibleTranslation,
   ScriptureSearchResult,
-} from '@/types/bible.types';
+} from "@/types/bible.types";
 
 export interface BibleProvider {
   /**
    * Search for a Scripture reference by natural language or OSIS notation.
    * e.g. "John 3:16", "Genesis 1:1-3", "Ps 23"
    */
-  searchReference(query: string): Promise<ScriptureSearchResult[]>;
+  searchReference(query: string, translation?: string): Promise<ScriptureSearchResult[]>;
 
   /**
    * Retrieve the full text of a passage.
@@ -40,11 +40,7 @@ export interface BibleProvider {
   /**
    * Retrieve the full chapter.
    */
-  getChapter(
-    book: string,
-    chapter: number,
-    translation?: string
-  ): Promise<BibleChapter>;
+  getChapter(book: string, chapter: number, translation?: string): Promise<BibleChapter>;
 
   /**
    * Retrieve metadata for a single book.

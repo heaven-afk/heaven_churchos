@@ -1,0 +1,58 @@
+{
+  "WEB": {
+    "books": 66,
+    "chapters": 1189,
+    "verses": 31095,
+    "url": "https://api.getbible.net/v2/web.json",
+    "sha256": "4624ec057e05ac8d62568fbe4d9f1df6155504ec2241f6f79f4257993bdd54ae",
+    "license": "Public Domain"
+  },
+  "ASV": {
+    "books": 66,
+    "chapters": 1189,
+    "verses": 31086,
+    "url": "https://api.getbible.net/v2/asv.json",
+    "sha256": "77a54e266ce2fb0e796e72dcce1952e9625f40f2a98de325307bc70dd6fdf42e",
+    "license": "Public Domain"
+  },
+  "BBE": {
+    "books": 66,
+    "chapters": 1189,
+    "verses": 31086,
+    "url": "https://api.getbible.net/v2/basicenglish.json",
+    "sha256": "361cb7c5bc983ee7e4dc9326e149805f445cd4e8d84492dc0bad113c3d0b1ac7",
+    "license": "Public Domain"
+  },
+  "YLT": {
+    "books": 66,
+    "chapters": 1189,
+    "verses": 31102,
+    "url": "https://api.getbible.net/v2/ylt.json",
+    "sha256": "708fca4720b477d920fcfeeb7b963fa36a228803cb29670a7c9c98c67de0fb52",
+    "license": "Public Domain"
+  },
+  "WBS": {
+    "books": 66,
+    "chapters": 1189,
+    "verses": 31102,
+    "url": "https://api.getbible.net/v2/wb.json",
+    "sha256": "2fb6539357c1140fc2eb9493c803c4c401339fbb0bbc0ebce0a755f71bc64457",
+    "license": "Public Domain"
+  },
+  "OYCB": {
+    "books": 66,
+    "chapters": 1189,
+    "verses": 31087,
+    "url": "https://ebible.org/Scriptures/yor_vpl.zip",
+    "sha256": "1b1392a2eb8db604dd73f222e3b9e50937c3f9b38fa221a442c08bb6034d5dff",
+    "license": "CC BY-SA 4.0"
+  },
+  "KJV": {
+    "books": 66,
+    "chapters": 1189,
+    "verses": 31102,
+    "url": "https://ebible.org/Scriptures/eng-kjv_vpl.zip",
+    "sha256": "75924cc273a68e7c890f819df17a3c2ecf70360da0acbbbb57e30b5724c6309a",
+    "license": "Public domain (UK Crown rights may apply)"
+  }
+}

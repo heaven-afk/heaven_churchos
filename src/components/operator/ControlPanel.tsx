@@ -36,7 +36,7 @@ export function ControlPanel() {
     >
       {/* Tab bar */}
       <div
-        className="flex border-b shrink-0 overflow-x-auto"
+        className="resource-tabs grid grid-cols-3 border-b shrink-0"
         style={{ borderColor: "var(--color-border)" }}
         role="tablist"
         aria-label="Control panel tabs"
@@ -49,7 +49,7 @@ export function ControlPanel() {
             aria-selected={activeTab === tab}
             aria-controls={`tabpanel-${tab}`}
             onClick={() => setTab(tab)}
-            className="flex-1 py-3 px-2 text-xs font-semibold uppercase tracking-wide capitalize transition-colors whitespace-nowrap"
+            className="py-3 px-2 text-xs font-semibold capitalize transition-colors whitespace-nowrap"
             style={{
               color:
                 activeTab === tab

@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+vi.mock('@/lib/supabase/client', () => ({createClient: () => { throw new Error('network unavailable'); }}));
 import {
   AuthService,
   DEFAULT_LOCAL_ORG,
@@ -13,6 +14,13 @@ describe("Auth Service (Phase 1 §8)", () => {
     if (typeof window !== "undefined") {
       localStorage.clear();
     }
+  });
+
+  it('does not return a local operator when configured cloud auth fails', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-key');
+    try { expect(await authService.getSession()).toBeNull(); }
+    finally { vi.unstubAllEnvs(); }
   });
 
   it("returns default local operator session when unconfigured", async () => {

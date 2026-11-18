@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
+import { PRODUCT } from "@/config/brand";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,34 +42,36 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="flex min-h-screen items-center justify-center p-4"
       style={{
         background: "var(--color-bg-base)",
       }}
     >
       <div
-        className="w-full max-w-md rounded-2xl border p-8 shadow-2xl flex flex-col gap-6"
+        className="flex w-full max-w-md flex-col gap-6 rounded-2xl border p-8 shadow-2xl"
         style={{
           background: "var(--color-bg-elevated)",
           borderColor: "var(--color-border)",
         }}
       >
         {/* Header */}
-        <div className="flex flex-col items-center text-center gap-1">
+        <div className="flex flex-col items-center gap-1 text-center">
           <span
-            className="text-xs font-bold tracking-widest uppercase mb-1 px-2.5 py-0.5 rounded"
+            className="mb-1 rounded px-2.5 py-0.5 text-xs font-bold tracking-widest uppercase"
             style={{
               background: "var(--color-primary-subtle)",
               color: "var(--color-primary)",
             }}
           >
-            VEYRIN
+            {PRODUCT.name}
           </span>
           <h1
             className="text-xl font-bold tracking-tight"
             style={{ color: "var(--color-fg-default)" }}
           >
-            {mode === "signin" ? "Sign In to Operator Workstation" : "Create Veyrin Account"}
+            {mode === "signin"
+              ? "Sign In to Operator Workstation"
+              : `Create ${PRODUCT.shortName} Account`}
           </h1>
           <p className="text-xs" style={{ color: "var(--color-fg-subtle)" }}>
             {mode === "signin"
@@ -79,7 +82,7 @@ export default function LoginPage() {
 
         {/* Tab switch */}
         <div
-          className="flex p-1 rounded-lg border"
+          className="flex rounded-lg border p-1"
           style={{
             background: "var(--color-surface-1)",
             borderColor: "var(--color-border)",
@@ -91,14 +94,10 @@ export default function LoginPage() {
               setMode("signin");
               setError(null);
             }}
-            className="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer"
+            className="flex-1 cursor-pointer rounded-md py-1.5 text-xs font-semibold transition-all"
             style={{
-              background:
-                mode === "signin" ? "var(--color-surface-2)" : "transparent",
-              color:
-                mode === "signin"
-                  ? "var(--color-primary)"
-                  : "var(--color-fg-muted)",
+              background: mode === "signin" ? "var(--color-surface-2)" : "transparent",
+              color: mode === "signin" ? "var(--color-primary)" : "var(--color-fg-muted)",
             }}
           >
             Sign In
@@ -109,14 +108,10 @@ export default function LoginPage() {
               setMode("signup");
               setError(null);
             }}
-            className="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer"
+            className="flex-1 cursor-pointer rounded-md py-1.5 text-xs font-semibold transition-all"
             style={{
-              background:
-                mode === "signup" ? "var(--color-surface-2)" : "transparent",
-              color:
-                mode === "signup"
-                  ? "var(--color-primary)"
-                  : "var(--color-fg-muted)",
+              background: mode === "signup" ? "var(--color-surface-2)" : "transparent",
+              color: mode === "signup" ? "var(--color-primary)" : "var(--color-fg-muted)",
             }}
           >
             Create Account
@@ -126,7 +121,7 @@ export default function LoginPage() {
         {/* Error Alert */}
         {error && (
           <div
-            className="p-3 rounded-lg text-xs flex items-center justify-between border"
+            className="flex items-center justify-between rounded-lg border p-3 text-xs"
             style={{
               background: "var(--color-error-subtle)",
               borderColor: "var(--color-error)",
@@ -136,7 +131,7 @@ export default function LoginPage() {
             <span>{error}</span>
             <button
               onClick={() => setError(null)}
-              className="font-bold hover:opacity-80 p-0.5 cursor-pointer"
+              className="cursor-pointer p-0.5 font-bold hover:opacity-80"
             >
               ✕
             </button>
@@ -149,7 +144,7 @@ export default function LoginPage() {
             <>
               <div>
                 <label
-                  className="block text-xs font-semibold uppercase tracking-wider mb-1"
+                  className="mb-1 block text-xs font-semibold tracking-wider uppercase"
                   style={{ color: "var(--color-fg-muted)" }}
                 >
                   Your Name
@@ -160,7 +155,7 @@ export default function LoginPage() {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none"
+                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
                   style={{
                     background: "var(--color-surface-1)",
                     borderColor: "var(--color-border)",
@@ -171,7 +166,7 @@ export default function LoginPage() {
 
               <div>
                 <label
-                  className="block text-xs font-semibold uppercase tracking-wider mb-1"
+                  className="mb-1 block text-xs font-semibold tracking-wider uppercase"
                   style={{ color: "var(--color-fg-muted)" }}
                 >
                   Church / Organization Name
@@ -182,7 +177,7 @@ export default function LoginPage() {
                   value={organizationName}
                   onChange={(e) => setOrganizationName(e.target.value)}
                   placeholder="e.g. Grace Community Church"
-                  className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none"
+                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
                   style={{
                     background: "var(--color-surface-1)",
                     borderColor: "var(--color-border)",
@@ -195,7 +190,7 @@ export default function LoginPage() {
 
           <div>
             <label
-              className="block text-xs font-semibold uppercase tracking-wider mb-1"
+              className="mb-1 block text-xs font-semibold tracking-wider uppercase"
               style={{ color: "var(--color-fg-muted)" }}
             >
               Email Address *
@@ -206,7 +201,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="operator@church.org"
-              className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none"
+              className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
               style={{
                 background: "var(--color-surface-1)",
                 borderColor: "var(--color-border)",
@@ -217,7 +212,7 @@ export default function LoginPage() {
 
           <div>
             <label
-              className="block text-xs font-semibold uppercase tracking-wider mb-1"
+              className="mb-1 block text-xs font-semibold tracking-wider uppercase"
               style={{ color: "var(--color-fg-muted)" }}
             >
               Password *
@@ -229,7 +224,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               minLength={6}
-              className="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none"
+              className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
               style={{
                 background: "var(--color-surface-1)",
                 borderColor: "var(--color-border)",
@@ -241,7 +236,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer mt-2 disabled:opacity-50"
+            className="mt-2 w-full cursor-pointer rounded-lg py-2.5 text-sm font-semibold transition-all disabled:opacity-50"
             style={{
               background: "var(--color-primary)",
               color: "var(--color-primary-fg)",
@@ -250,8 +245,8 @@ export default function LoginPage() {
             {isLoading
               ? "Connecting..."
               : mode === "signin"
-              ? "Sign In ↗"
-              : "Create Account & Workspace"}
+                ? "Sign In ↗"
+                : "Create Account & Workspace"}
           </button>
         </form>
 

@@ -94,7 +94,7 @@ function EmergencyButton({
       className="flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold tracking-wider transition-all"
       style={{
         background: isActive ? activeBg : "transparent",
-        color: isActive ? activeColor : "var(--color-fg-subtle)",
+        color: isActive ? activeColor : "var(--color-fg-muted)",
         border: `1px solid ${isActive ? activeColor : "var(--color-border)"}`,
         transitionDuration: "var(--duration-fast)",
       }}
@@ -105,7 +105,7 @@ function EmergencyButton({
       <kbd
         className="ml-0.5 rounded px-0.5 text-[10px]"
         style={{
-          background: "rgba(255 255 255 / 0.06)",
+          background: "var(--color-surface-2)",
           color: "var(--color-fg-subtle)",
           fontFamily: "var(--font-mono)",
         }}

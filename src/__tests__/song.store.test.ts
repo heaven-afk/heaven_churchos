@@ -10,10 +10,11 @@ describe("Song Store", () => {
 
   it("initializes with default hymns", () => {
     const songs = useSongStore.getState().songs;
-    expect(songs.length).toBeGreaterThanOrEqual(3);
+    expect(songs.length).toBeGreaterThanOrEqual(1);
     const titles = songs.map((s) => s.title);
     expect(titles).toContain("Amazing Grace");
-    expect(titles).toContain("How Great Thou Art");
+    expect(titles).not.toContain("How Great Thou Art");
+    expect(titles).not.toContain("10,000 Reasons (Bless the Lord)");
   });
 
   it("can select a song and filter songs by query", () => {

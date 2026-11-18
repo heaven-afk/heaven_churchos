@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import type { OutputStatus, StageAlert, DisplayTarget } from "@/types/presentation.types";
-import { dispatch } from "@/actions/presentation.actions";
 
 interface OverlayLayerProps {
   status: OutputStatus;
@@ -23,37 +22,40 @@ interface OverlayLayerProps {
  * Alert auto-dismiss is managed here via useEffect timer.
  */
 export function OverlayLayer({ status, activeAlert, target, isThumbnail = false }: OverlayLayerProps) {
+  const [expiredId, setExpiredId] = useState<string | null>(null);
   // Auto-dismiss timer for timed alerts
   useEffect(() => {
     if (!activeAlert?.durationMs) return;
     const timer = setTimeout(() => {
-      dispatch({ type: "DISMISS_STAGE_ALERT" });
-    }, activeAlert.durationMs);
+      setExpiredId(activeAlert.id);
+    }, Math.max(0, activeAlert.createdAt + activeAlert.durationMs - Date.now()));
     return () => clearTimeout(timer);
   }, [activeAlert]);
 
   const shouldShowAlert =
     activeAlert &&
+    activeAlert.id !== expiredId &&
+    status !== 'black' &&
     (activeAlert.target === "all" || activeAlert.target === target);
 
   return (
     <>
       {/* BLACK output mask */}
-      {status === "black" && (
+      {status === "black" && target !== 'livestream' && (
         <div
-          className="absolute inset-0 bg-black"
-          style={{ zIndex: 40 }}
+          className="absolute inset-0"
+          style={{ zIndex: 40, background: 'var(--color-output-black)' }}
           aria-label="Black screen"
         />
       )}
 
       {/* FROZEN badge */}
-      {status === "frozen" && !isThumbnail && (
+      {status === "frozen" && !isThumbnail && target === 'stage' && (
         <div
           className="absolute top-3 right-3 font-bold uppercase rounded tracking-wider shadow text-xs px-2.5 py-1"
           style={{
-            background: "var(--color-warning, #f59e0b)",
-            color: "#000000",
+            background: "var(--color-warning)",
+            color: "var(--color-warning-fg)",
             zIndex: 41,
           }}
           aria-label="Output is frozen"
@@ -77,9 +79,9 @@ export function OverlayLayer({ status, activeAlert, target, isThumbnail = false 
           <div
             className="flex-1 flex items-center gap-3 rounded-xl px-6 py-4 shadow-xl"
             style={{
-              background: "rgba(245, 158, 11, 0.95)",
-              color: "#000000",
-              border: "2px solid rgba(255,255,255,0.3)",
+              background: "var(--color-warning)",
+              color: "var(--color-warning-fg)",
+              border: "2px solid var(--color-border-strong)",
               backdropFilter: "blur(8px)",
             }}
           >

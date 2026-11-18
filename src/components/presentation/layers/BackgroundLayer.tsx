@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import type { Background, OutputStatus } from "@/types/presentation.types";
 
 interface BackgroundLayerProps {
@@ -19,6 +19,11 @@ interface BackgroundLayerProps {
  * For alpha-transparent outputs (livestream), renders nothing (background: transparent).
  */
 export function BackgroundLayer({ background, status, isAlphaTransparent = false }: BackgroundLayerProps) {
+  const video = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (status === 'frozen') video.current?.pause();
+    else if (video.current) void video.current.play().catch(() => {});
+  }, [status, background?.value]);
   if (isAlphaTransparent) return null;
   if (status === "black") return null;
 
@@ -47,8 +52,9 @@ export function BackgroundLayer({ background, status, isAlphaTransparent = false
   if (bg.type === "video" && bg.value) {
     return (
       <video
+        ref={video}
         src={bg.value}
-        autoPlay
+        autoPlay={status !== 'frozen'}
         loop
         muted
         playsInline

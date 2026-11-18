@@ -13,7 +13,7 @@ export interface BibleBook {
   name: string;
   shortName: string;
   chapters: number;
-  testament: 'OT' | 'NT';
+  testament: "OT" | "NT";
 }
 
 export interface BibleVerse {
@@ -42,6 +42,9 @@ export interface BibleTranslation {
   language: string;
   /** Whether this translation can be shown publicly without per-use licensing */
   isPublicDomain: boolean;
+  license?: string;
+  attribution?: string;
+  sourceUrl?: string;
 }
 
 export interface ScriptureSearchResult {

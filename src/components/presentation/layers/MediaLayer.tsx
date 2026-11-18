@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import type { PresentationSlide } from "@/types/presentation.types";
 
 interface MediaLayerProps {
   slide: PresentationSlide | null;
   supportsMedia?: boolean;
+  paused?: boolean;
 }
 
 /**
@@ -14,7 +15,12 @@ interface MediaLayerProps {
  * Renders full-frame media slides (dedicated image or video slides with no overlay text).
  * Skipped for outputs that do not support media (e.g. Stage, Livestream).
  */
-export function MediaLayer({ slide, supportsMedia = true }: MediaLayerProps) {
+export function MediaLayer({ slide, supportsMedia = true, paused = false }: MediaLayerProps) {
+  const video = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (paused) video.current?.pause();
+    else if (video.current) void video.current.play().catch(() => {});
+  }, [paused, slide?.mediaUrl]);
   if (!supportsMedia || !slide) return null;
 
   if (slide.mediaType === "image" && slide.mediaUrl && !slide.text && !slide.title) {
@@ -34,8 +40,9 @@ export function MediaLayer({ slide, supportsMedia = true }: MediaLayerProps) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-black" style={{ zIndex: 20 }}>
         <video
+          ref={video}
           src={slide.mediaUrl}
-          autoPlay
+          autoPlay={!paused}
           loop
           muted
           playsInline

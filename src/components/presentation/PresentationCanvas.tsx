@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useShallow } from "zustand/react/shallow";
 import { usePresentationStore } from "@/store/presentation.store";
 import { usePresentationReceiver } from "@/hooks/usePresentationSync";
 import { getOutputTargetConfig } from "@/config/outputs";
@@ -64,7 +65,18 @@ export function PresentationCanvas({
 }: PresentationCanvasProps) {
   usePresentationReceiver(isReceiver);
 
-  const store = usePresentationStore();
+  const store = usePresentationStore(
+    useShallow((s) => ({
+      status: s.status,
+      liveSlide: s.liveSlide,
+      nextSlide: s.nextSlide,
+      layoutOverride: s.layoutOverride,
+      backgroundOverride: s.backgroundOverride,
+      activeAlert: s.activeAlert,
+      activeTransition: s.activeTransition,
+      transitionDurationMs: s.transitionDurationMs,
+    }))
+  );
   const targetConfig = getOutputTargetConfig(target);
 
   const status = propStatus ?? store.status;
@@ -73,19 +85,20 @@ export function PresentationCanvas({
   const layoutOverride =
     propLayoutOverride !== undefined ? propLayoutOverride : store.layoutOverride;
   const backgroundOverride =
-    propBackgroundOverride !== undefined ? propBackgroundOverride : store.backgroundOverride;
+    propBackgroundOverride !== undefined
+      ? propBackgroundOverride
+      : store.backgroundOverride;
   const activeAlert = store.activeAlert;
   const activeTransition = store.activeTransition;
   const transitionDurationMs = store.transitionDurationMs;
 
   const resolvedLayout = layoutOverride ?? liveSlide?.layout ?? "full-screen";
-  const resolvedBackground =
-    backgroundOverride ??
+  const resolvedBackground = backgroundOverride ??
     liveSlide?.background ?? {
       id: "default-black",
       type: "color",
       name: "Black",
-      value: "#000000",
+      value: "var(--color-output-black)",
     };
 
   const isAlphaTransparent = targetConfig.capabilities.isAlphaTransparent;
@@ -96,11 +109,14 @@ export function PresentationCanvas({
   // Root container background (for color/gradient types, handled via CSS)
   const getRootBackground = (): React.CSSProperties => {
     if (isAlphaTransparent) return { background: "transparent" };
-    if (status === "black") return { background: "#000000" };
-    if (!supportsBackground) return { background: "#0d1117" };
-    if (resolvedBackground.type === "color") return { background: resolvedBackground.value || "#000000" };
-    if (resolvedBackground.type === "gradient") return { background: resolvedBackground.value || "#000000" };
-    return { background: "#000000" };
+    if (status === "black") return { background: "var(--color-output-black)" };
+    if (!supportsBackground) return { background: "var(--color-bg-base)" };
+    if (resolvedBackground.type === "none") return { background: "transparent" };
+    if (resolvedBackground.type === "color")
+      return { background: resolvedBackground.value || "var(--color-output-black)" };
+    if (resolvedBackground.type === "gradient")
+      return { background: resolvedBackground.value || "var(--color-output-black)" };
+    return { background: "var(--color-output-black)" };
   };
 
   const hasTextBackground =
@@ -110,7 +126,7 @@ export function PresentationCanvas({
 
   return (
     <div
-      className={`relative h-full w-full flex items-center justify-center overflow-hidden select-none ${className}`}
+      className={`relative flex h-full w-full items-center justify-center overflow-hidden select-none ${className}`}
       style={getRootBackground()}
       role="region"
       aria-label={`${targetConfig.name} presentation output`}
@@ -126,8 +142,12 @@ export function PresentationCanvas({
       )}
 
       {/* Layer 2: Media */}
-      {status !== "black" && (
-        <MediaLayer slide={liveSlide} supportsMedia={supportsMedia} />
+      {status !== "black" && status !== "clear" && (
+        <MediaLayer
+          slide={liveSlide}
+          supportsMedia={supportsMedia}
+          paused={status === "frozen"}
+        />
       )}
 
       {/* Layer 3: Content (target-specific renderer) */}
@@ -141,6 +161,7 @@ export function PresentationCanvas({
             />
           ) : target === "livestream" ? (
             <LivestreamRenderer
+              key={`${liveSlide?.id}:${liveSlide?.text}:${liveSlide?.subtext}:${liveSlide?.title}`}
               slide={liveSlide}
               activeTransition={activeTransition}
               transitionDurationMs={transitionDurationMs}
@@ -148,6 +169,7 @@ export function PresentationCanvas({
           ) : (
             // Default: Congregation renderer
             <CongregationRenderer
+              key={`${liveSlide?.id}:${liveSlide?.text}:${liveSlide?.subtext}:${liveSlide?.title}`}
               slide={liveSlide}
               layout={resolvedLayout}
               activeTransition={activeTransition}
@@ -160,9 +182,14 @@ export function PresentationCanvas({
       )}
 
       {/* Clear indicator (congregation + stage show this; livestream renders nothing) */}
-      {status === "clear" && target !== "livestream" && (
-        <div className="text-center opacity-30 select-none z-30" style={{ color: "#ffffff" }}>
-          <p className={`font-mono tracking-widest uppercase ${isThumbnail ? "text-[10px]" : "text-sm"}`}>
+      {status === "clear" && isThumbnail && target !== "livestream" && (
+        <div
+          className="z-30 text-center opacity-30 select-none"
+          style={{ color: "var(--color-output-white)" }}
+        >
+          <p
+            className={`font-mono tracking-widest uppercase ${isThumbnail ? "text-[10px]" : "text-sm"}`}
+          >
             OUTPUT CLEAR
           </p>
         </div>
@@ -175,17 +202,6 @@ export function PresentationCanvas({
         target={target}
         isThumbnail={isThumbnail}
       />
-
-      {/* Development debug overlay */}
-      {isReceiver && process.env.NODE_ENV === "development" && (
-        <div
-          className="absolute bottom-2 left-2 text-[10px] font-mono opacity-30"
-          style={{ color: "#ffffff", zIndex: 50 }}
-          aria-hidden="true"
-        >
-          [{target}] [{status}] layout: {resolvedLayout} | bg: {resolvedBackground.type}
-        </div>
-      )}
     </div>
   );
 }

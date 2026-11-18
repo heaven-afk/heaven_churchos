@@ -13,7 +13,7 @@ import { displayAdapter } from "@/providers/display/browser.adapter";
  * - Slide position in current item
  */
 export function OutputMonitor() {
-  const { status, liveSlide, layoutOverride, liveSlideIndex, slides, activeAlert } =
+  const { status, liveSlide, layoutOverride, liveSlideIndex, liveSlides: slides, activeAlert } =
     usePresentationStore();
   const selectedItemTitle = useServiceStore((s) => {
     const id = s.selectedItemId;

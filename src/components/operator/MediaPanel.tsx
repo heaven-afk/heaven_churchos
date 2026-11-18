@@ -174,7 +174,7 @@ export function MediaPanel() {
                 title="Click to stage preview"
               >
                 {media.type === "video" ? (
-                  <VideoThumbnail url={media.url} name={media.name} />
+                  <VideoThumbnail url={media.url ?? ''} name={media.name} />
                 ) : (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img

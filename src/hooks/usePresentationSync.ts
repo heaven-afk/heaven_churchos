@@ -5,36 +5,46 @@
  * Phase 2: Broadcasts nextSlide, activeAlert, activeTransition, transitionDurationMs.
  */
 
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { usePresentationStore } from '@/store/presentation.store';
+import { useEffect } from "react";
+import { usePresentationStore } from "@/store/presentation.store";
+import { dispatch } from "@/actions/presentation.actions";
 import {
   getStoredPresentationState,
   listenToPresentationSync,
   requestPresentationSync,
   broadcastPresentationState,
   type SyncedPresentationState,
-} from '@/lib/presentation/sync';
+} from "@/lib/presentation/sync";
 
 export function usePresentationReceiver(enabled: boolean = true): void {
-  const hydrateFromSync = usePresentationStore((s) => s.hydrateFromSync);
-
   useEffect(() => {
     if (!enabled) return;
     const cached = getStoredPresentationState();
-    if (cached) hydrateFromSync(cached);
-    requestPresentationSync();
+    if (cached) dispatch({ type: "RECEIVE_OUTPUT", state: cached });
     const unsubscribe = listenToPresentationSync({
       onStateUpdate: (state: SyncedPresentationState) => {
-        hydrateFromSync(state);
+        dispatch({ type: "RECEIVE_OUTPUT", state });
       },
     });
-    return () => { unsubscribe(); };
-  }, [enabled, hydrateFromSync]);
+    requestPresentationSync();
+    return () => {
+      unsubscribe();
+    };
+  }, [enabled]);
 }
 
 export function useOperatorBroadcaster(): void {
+  const activeAlert = usePresentationStore((s) => s.activeAlert);
+  useEffect(() => {
+    if (!activeAlert?.durationMs) return;
+    const timer = setTimeout(
+      () => dispatch({ type: "DISMISS_STAGE_ALERT" }),
+      Math.max(0, activeAlert.createdAt + activeAlert.durationMs - Date.now())
+    );
+    return () => clearTimeout(timer);
+  }, [activeAlert]);
   useEffect(() => {
     const unsubscribe = listenToPresentationSync({
       onRequestSync: () => {
@@ -51,6 +61,8 @@ export function useOperatorBroadcaster(): void {
         });
       },
     });
-    return () => { unsubscribe(); };
+    return () => {
+      unsubscribe();
+    };
   }, []);
 }

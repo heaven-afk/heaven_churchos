@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from "vitest";
 import { WebBibleProvider } from "@/providers/bible/web.provider";
+import './fixtures/bible-assets';
 
 describe("WebBibleProvider", () => {
   const provider = new WebBibleProvider();

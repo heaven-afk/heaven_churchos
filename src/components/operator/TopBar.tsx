@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { PRODUCT } from "@/config/brand";
+import { useUIStore } from "@/store/ui.store";
 import { EmergencyControls } from "./EmergencyControls";
 import { TransitionPicker } from "./TransitionPicker";
 import { OutputsMenu } from "./OutputsMenu";
@@ -24,6 +26,8 @@ export function TopBar() {
   // Listen for sync requests from external presentation windows
   useOperatorBroadcaster();
   const router = useRouter();
+  const toggleService = useUIStore(s => s.toggleServicePanel);
+  const toggleResources = useUIStore(s => s.toggleControlPanel);
 
   const currentService = useServiceStore((s) => s.currentService);
   const syncStatus = useServiceStore((s) => s.syncStatus);
@@ -48,9 +52,9 @@ export function TopBar() {
 
   return (
     <header
-      className="flex items-center gap-4 border-b px-4"
+      className="operator-topbar flex items-center gap-4 border-b px-4"
       style={{
-        height: "var(--topbar-height)",
+        minHeight: "var(--topbar-height)",
         background: "var(--color-bg-elevated)",
         borderColor: "var(--color-border)",
       }}
@@ -59,11 +63,12 @@ export function TopBar() {
       {/* Wordmark */}
       <div className="flex items-center gap-2 min-w-0">
         <span
-          className="text-sm font-semibold tracking-wide select-none"
+          className="flex items-center gap-2 text-sm font-semibold tracking-wide select-none"
           style={{ color: "var(--color-fg-default)" }}
-          aria-label="Veyrin"
+          aria-label={PRODUCT.name}
         >
-          VEYRIN
+          <span className="brand-mark" aria-hidden="true">H</span>
+          <span className="brand-name">{PRODUCT.name}</span>
         </span>
       </div>
 
@@ -159,6 +164,7 @@ export function TopBar() {
         )}
       </div>
 
+      <div className="panel-toggles"><button className="operator-chip" onClick={toggleService}>Service</button><button className="operator-chip" onClick={toggleResources}>Resources</button></div>
       {/* Slide Transition Selector (Phase 2 WS3) */}
       <TransitionPicker />
 

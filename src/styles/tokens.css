@@ -30,8 +30,8 @@
 
   /* Foreground / Text */
   --color-fg-default:   #e8eaf2;
-  --color-fg-muted:     #8892a4;
-  --color-fg-subtle:    #545e72;
+  --color-fg-muted:     #a4adbd;
+  --color-fg-subtle:    #8892a4;
   --color-fg-inverse:   #0a0b0d;
 
   /* Primary (action blue) */
@@ -163,10 +163,12 @@
 /* ─── Panel Dimensions ────────────────────────────────────────────── */
 
 :root {
-  --panel-service-width:    280px;
-  --panel-control-width:    280px;
+  --panel-service-width:    clamp(220px, 20vw, 280px);
+  --panel-control-width:    clamp(300px, 27vw, 370px);
   --panel-output-height:     48px;
-  --topbar-height:           52px;
+  --topbar-height:           68px;
+  --color-output-black: #000000;
+  --color-output-white: #ffffff;
 }
 
 /* ─── Light Theme Override ────────────────────────────────────────── */

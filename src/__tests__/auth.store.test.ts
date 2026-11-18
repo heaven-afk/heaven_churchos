@@ -11,8 +11,8 @@ describe("Auth Store (Phase 1 §8)", () => {
   it("initializes with authenticated operator in default workspace", () => {
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(true);
-    expect(state.user?.displayName).toBe("Lead Operator");
-    expect(state.organization?.name).toBe("Grace Community Church");
+    expect(state.user?.displayName).toBe("Local operator");
+    expect(state.organization?.name).toBe("Local workstation");
   });
 
   it("handles sign in and updates user state", async () => {

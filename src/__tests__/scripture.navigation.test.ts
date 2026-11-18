@@ -4,6 +4,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { WebBibleProvider } from "@/providers/bible/web.provider";
+import './fixtures/bible-assets';
 import {
   passageToPresentationSlides,
   createScriptureServiceItem,
@@ -65,14 +66,14 @@ describe("Scripture Live Workflow & Navigation", () => {
     expect(state.status).toBe("live");
     expect(state.liveSlide?.text).toContain("For God so loved the world");
     expect(state.liveSlideIndex).toBe(0);
-    expect(state.nextSlide?.text).toContain("For God didn't send his Son");
+    expect(state.nextSlide?.text).toContain("For God didn’t send his Son");
 
     // 5. Navigate to Next Verse (v17)
     dispatch({ type: "NEXT_SLIDE" });
 
     state = usePresentationStore.getState();
     expect(state.liveSlideIndex).toBe(1);
-    expect(state.liveSlide?.text).toContain("For God didn't send his Son");
+    expect(state.liveSlide?.text).toContain("For God didn’t send his Son");
     expect(state.nextSlide?.text).toContain("He who believes in him");
 
     // 6. Navigate to Next Verse (v18)
@@ -88,6 +89,6 @@ describe("Scripture Live Workflow & Navigation", () => {
 
     state = usePresentationStore.getState();
     expect(state.liveSlideIndex).toBe(1);
-    expect(state.liveSlide?.text).toContain("For God didn't send his Son");
+    expect(state.liveSlide?.text).toContain("For God didn’t send his Son");
   });
 });

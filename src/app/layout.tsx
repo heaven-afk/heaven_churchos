@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { PRODUCT } from "@/config/brand";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,11 +17,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Veyrin",
-    template: "%s — Veyrin",
+    default: PRODUCT.name,
+    template: `%s — ${PRODUCT.name}`,
   },
   description:
-    "Veyrin — Modern church presentation and live production platform.",
+    `${PRODUCT.name} — Church presentation and live production platform.`,
   robots: { index: false, follow: false },
 };
 

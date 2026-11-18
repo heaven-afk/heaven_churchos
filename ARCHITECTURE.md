@@ -1,5 +1,26 @@
 # Veyrin Architecture
 
+Current working display name: Heaven Church OS (`src/config/brand.ts`). See
+`PRODUCTION_REVIEW.md` for release qualification, OBS setup and known limits.
+
+### Local output and Scripture hardening (17 November 2026)
+
+`slides` is the prepared queue; `liveSlides` is captured on take-live. Preparation
+does not clear live content or change live navigation. Sync hydration enters via
+the `RECEIVE_OUTPUT` action. Ordinary browser outputs use BroadcastChannel and
+localStorage. OBS's separate browser uses `/api/output-relay`, a loopback-only
+single-process snapshot transport with separate read/write capabilities. No
+presentation core logic depends on OBS. This bridge is not a serverless relay.
+
+BibleProvider reads complete, version-specific static JSON books in
+`public/bibles/<version>/<book>.json`. It shares in-flight book loads and caches
+chapters. Unknown versions and missing verses produce errors. Data provenance,
+licenses and input hashes are in `public/bibles/`; no verse text is synthesized.
+
+Song edits persist to browser storage under a product-independent key. The
+starter library includes only the public-domain Amazing Grace text. Cloud tenant
+scoping and persistent media storage remain release follow-up work.
+
 > Technical architecture reference for contributors and AI agents.
 
 ---

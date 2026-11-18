@@ -9,7 +9,7 @@ import type { TransitionType } from "@/types/presentation.types";
  * TransitionPicker — WS3
  *
  * Compact operator control to select the active slide transition style.
- * Cut: instant. Dissolve: opacity crossfade.
+ * Cut: instant. Dissolve: content opacity fade.
  */
 export function TransitionPicker() {
   const activeTransition = usePresentationStore((s) => s.activeTransition);
@@ -20,7 +20,7 @@ export function TransitionPicker() {
 
   const options: { value: TransitionType; label: string; title: string }[] = [
     { value: "cut", label: "Cut", title: "Instant transition (default for stage)" },
-    { value: "dissolve", label: "Dissolve", title: "Opacity crossfade (default for congregation)" },
+    { value: "dissolve", label: "Dissolve", title: "Content fade (default for congregation)" },
   ];
 
   return (

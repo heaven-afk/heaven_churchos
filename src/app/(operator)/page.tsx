@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PreviewPanel } from "@/components/operator/PreviewPanel";
 
 export const metadata: Metadata = {
-  title: "Operator — Veyrin",
+  title: "Operator Workstation",
 };
 
 /**

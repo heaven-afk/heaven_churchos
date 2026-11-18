@@ -23,56 +23,17 @@ import {
   parseScriptureReference,
   formatScriptureReference,
 } from "@/lib/bible/reference-parser";
-import rawWebChapters from "@/data/bible/web/chapters.json";
-import rawKjvChapters from "@/data/bible/kjv/chapters.json";
+import { BIBLE_TRANSLATIONS } from "@/config/bibles";
+export const AVAILABLE_TRANSLATIONS = BIBLE_TRANSLATIONS;
 
-interface RawChapterMap {
-  [key: string]: {
-    book: string;
-    chapter: number;
-    verses: BibleVerse[];
-  };
-}
-
-const WEB_CHAPTER_DATA = rawWebChapters as RawChapterMap;
-const KJV_CHAPTER_DATA = rawKjvChapters as RawChapterMap;
-
-export const AVAILABLE_TRANSLATIONS: BibleTranslation[] = [
-  {
-    id: "WEB",
-    name: "World English Bible",
-    abbreviation: "WEB",
-    language: "en",
-    isPublicDomain: true,
-  },
-  {
-    id: "KJV",
-    name: "King James Version",
-    abbreviation: "KJV",
-    language: "en",
-    isPublicDomain: true,
-  },
-  {
-    id: "ASV",
-    name: "American Standard Version",
-    abbreviation: "ASV",
-    language: "en",
-    isPublicDomain: true,
-  },
-  {
-    id: "BBE",
-    name: "Bible in Basic English",
-    abbreviation: "BBE",
-    language: "en",
-    isPublicDomain: true,
-  },
-];
-
-export const WEB_TRANSLATION: BibleTranslation = AVAILABLE_TRANSLATIONS[0];
+export const WEB_TRANSLATION: BibleTranslation = AVAILABLE_TRANSLATIONS.find(
+  (t) => t.id === "WEB"
+)!;
 
 export class WebBibleProvider implements BibleProvider {
   private readonly defaultTranslation = "WEB";
   private chapterCache = new Map<string, BibleChapter>();
+  private bookRequests = new Map<string, Promise<Record<string, BibleVerse[]>>>();
 
   async getTranslations(): Promise<BibleTranslation[]> {
     return AVAILABLE_TRANSLATIONS;
@@ -110,49 +71,53 @@ export class WebBibleProvider implements BibleProvider {
     translation?: string
   ): Promise<BibleChapter> {
     const activeTranslation = (translation ?? this.defaultTranslation).toUpperCase();
-    const resolvedBook = findBook(book);
-    const bookId = resolvedBook ? resolvedBook.id : book.toUpperCase();
-    const cacheKey = `${bookId}-${chapter}-${activeTranslation}`;
-
-    if (this.chapterCache.has(cacheKey)) {
-      return this.chapterCache.get(cacheKey)!;
+    if (!AVAILABLE_TRANSLATIONS.some((t) => t.id === activeTranslation)) {
+      throw new Error(
+        "This translation is not installed. NIV, AMP and MSG require publisher permission."
+      );
     }
-
-    const chapterKey = `${bookId}-${chapter}`;
-    let result: BibleChapter;
-
-    // Check specific translation dataset
-    if (activeTranslation === "KJV" && KJV_CHAPTER_DATA[chapterKey]) {
-      result = {
-        book: bookId,
-        chapter,
-        verses: KJV_CHAPTER_DATA[chapterKey].verses,
-      };
-    } else if (WEB_CHAPTER_DATA[chapterKey]) {
-      result = {
-        book: bookId,
-        chapter,
-        verses: WEB_CHAPTER_DATA[chapterKey].verses,
-      };
-    } else {
-      // Fallback generator for un-curated chapters to guarantee all 66 books are operable in all versions
-      const count = Math.min(25, 30);
-      const generatedVerses: BibleVerse[] = [];
-      for (let v = 1; v <= count; v++) {
-        generatedVerses.push({
-          book: bookId,
-          chapter,
-          verse: v,
-          text: `[${resolvedBook?.name ?? bookId} ${chapter}:${v}] The word of the Lord in the ${activeTranslation} translation.`,
+    const resolvedBook = await this.getBook(book);
+    if (!Number.isInteger(chapter) || chapter < 1 || chapter > resolvedBook.chapters) {
+      throw new Error("This chapter does not exist. Check the Scripture reference.");
+    }
+    const cacheKey = resolvedBook.id + "-" + chapter + "-" + activeTranslation;
+    const cached = this.chapterCache.get(cacheKey);
+    if (cached) return cached;
+    const key = activeTranslation + "/" + resolvedBook.id;
+    let request = this.bookRequests.get(key);
+    if (!request) {
+      request = fetch("/bibles/" + key + ".json")
+        .then(async (response) => {
+          if (!response.ok)
+            throw new Error(
+              "Unable to load this Bible book. Keep the local server running and try again."
+            );
+          return (await response.json()) as Record<string, BibleVerse[]>;
+        })
+        .catch((error: unknown) => {
+          this.bookRequests.delete(key);
+          throw error;
         });
-      }
-      result = {
-        book: bookId,
-        chapter,
-        verses: generatedVerses,
-      };
+      this.bookRequests.set(key, request);
     }
-
+    const data = await request;
+    const verses = data[String(chapter)];
+    if (
+      !Array.isArray(verses) ||
+      !verses.length ||
+      verses.some(
+        (v) =>
+          v.book !== resolvedBook.id ||
+          v.chapter !== chapter ||
+          !Number.isInteger(v.verse) ||
+          typeof v.text !== "string" ||
+          !v.text.trim()
+      )
+    )
+      throw new Error(
+        "This Bible chapter is unavailable. No substitute text has been used."
+      );
+    const result = { book: resolvedBook.id, chapter, verses };
     this.chapterCache.set(cacheKey, result);
     return result;
   }
@@ -166,25 +131,27 @@ export class WebBibleProvider implements BibleProvider {
   ): Promise<BiblePassage> {
     const activeTranslation = (translation ?? this.defaultTranslation).toUpperCase();
     const resolvedBook = await this.getBook(book);
-    const chapterData = await this.getChapter(resolvedBook.id, chapter, activeTranslation);
-
-    const startV = Math.max(1, verse);
-    const endV = verseEnd !== undefined ? Math.max(startV, verseEnd) : startV;
-
-    const verses = chapterData.verses.filter(
-      (v) => v.verse >= startV && v.verse <= endV
+    const chapterData = await this.getChapter(
+      resolvedBook.id,
+      chapter,
+      activeTranslation
     );
 
-    // If specific verse was requested beyond cached range, synthesize the verse
-    if (verses.length === 0) {
-      for (let v = startV; v <= endV; v++) {
-        verses.push({
-          book: resolvedBook.id,
-          chapter,
-          verse: v,
-          text: `[${resolvedBook.name} ${chapter}:${v}] ${activeTranslation} verse text.`,
-        });
-      }
+    const startV = verse;
+    const endV = verseEnd ?? verse;
+    if (
+      !Number.isInteger(startV) ||
+      !Number.isInteger(endV) ||
+      startV < 1 ||
+      endV < startV
+    ) {
+      throw new Error("Enter a valid verse or verse range.");
+    }
+    const verses = chapterData.verses.filter((v) => v.verse >= startV && v.verse <= endV);
+    if (verses.length !== endV - startV + 1) {
+      throw new Error(
+        "This verse range is unavailable in the selected translation. Check the reference."
+      );
     }
 
     const reference = formatScriptureReference({
@@ -201,7 +168,10 @@ export class WebBibleProvider implements BibleProvider {
     };
   }
 
-  async searchReference(query: string, translation?: string): Promise<ScriptureSearchResult[]> {
+  async searchReference(
+    query: string,
+    translation?: string
+  ): Promise<ScriptureSearchResult[]> {
     if (!query || query.trim().length === 0) return [];
     const activeTranslation = (translation ?? this.defaultTranslation).toUpperCase();
 

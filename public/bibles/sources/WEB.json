@@ -1,0 +1,30 @@
+{
+  "translation": "World English Bible",
+  "abbreviation": "web",
+  "description": "World English Bible",
+  "lang": "en",
+  "language": "English",
+  "direction": "LTR",
+  "encoding": "UTF-8",
+  "distribution_lcsh": "Bible. English.",
+  "distribution_version": "3.1",
+  "distribution_version_date": "2012-01-25",
+  "distribution_abbreviation": "web",
+  "distribution_about": "World English Bible (WEB)\\par\\par Public Domain\\par\\par\tThe World English Bible is a 1997 revision of the American Standard Version of the Holy Bible, first published in 1901. It is in the Public Domain. Please feel free to copy and distribute it freely.\\par\\par Thank you to Michael Paul Johnson for making this work available. For the latest information, to report corrections, or for other correspondence visit http://www.ebible.org",
+  "distribution_license": "Public Domain",
+  "distribution_sourcetype": "OSIS",
+  "distribution_source": "http://ebible.org/web/",
+  "distribution_versification": "",
+  "distribution_history": {
+    "history_3.1": "Corrected mis-converted tags (2012-01-25)",
+    "history_3.0": "Updated to text as of 2012-01-11 (2012-01-18)",
+    "history_1.8": "Updated to text as of 2007-08-26 (2008-04-21)",
+    "history_1.7": "Updated to text as of 2007-04-20",
+    "history_1.6": "Move to OSIS, updated to text as of 2006-01-05",
+    "history_1.5": "Compressed the module",
+    "history_1.4": "Replaces some more missing verses",
+    "history_1.3": "Added some missing verses & fixed words in red",
+    "history_1.2": "Fixed footnotes",
+    "history_1.1": "Updated as of 04-13-2001"
+  }
+}

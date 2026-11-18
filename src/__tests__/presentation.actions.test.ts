@@ -43,6 +43,31 @@ function resetStore() {
 describe("Presentation Actions", () => {
   beforeEach(resetStore);
 
+  it('preparing another item preserves the live slide and its navigation queue', () => {
+    dispatch({type: 'SET_SLIDES', slides: [MOCK_SLIDE, MOCK_SLIDE_2]});
+    dispatch({type: 'SEND_LIVE', slide: MOCK_SLIDE});
+    dispatch({type: 'SET_SLIDES', slides: [{...MOCK_SLIDE, id: 'new-item', text: 'New preparation'}]});
+    expect(usePresentationStore.getState().liveSlide).toEqual(MOCK_SLIDE);
+    expect(usePresentationStore.getState().previewSlide?.id).toBe('new-item');
+    dispatch({type: 'NEXT_SLIDE'});
+    expect(usePresentationStore.getState().liveSlide).toEqual(MOCK_SLIDE_2);
+  });
+
+  it('freeze holds the live slide while allowing preview preparation and emergency black', () => {
+    dispatch({type: 'SET_SLIDES', slides: [MOCK_SLIDE, MOCK_SLIDE_2]});
+    dispatch({type: 'SEND_LIVE', slide: MOCK_SLIDE});
+    dispatch({type: 'FREEZE_OUTPUT'});
+    dispatch({type: 'NEXT_SLIDE'});
+    dispatch({type: 'GO_TO_SLIDE', slideId: MOCK_SLIDE_2.id});
+    dispatch({type: 'SEND_LIVE', slide: MOCK_SLIDE_2});
+    dispatch({type: 'SET_PREVIEW', slide: MOCK_SLIDE_2});
+    expect(usePresentationStore.getState().liveSlide).toEqual(MOCK_SLIDE);
+    expect(usePresentationStore.getState().status).toBe('frozen');
+    expect(usePresentationStore.getState().previewSlide).toEqual(MOCK_SLIDE_2);
+    dispatch({type: 'BLACK_SCREEN'});
+    expect(usePresentationStore.getState().status).toBe('black');
+  });
+
   it("SET_PREVIEW does not affect liveSlide or status (Preview/Live separation)", () => {
     dispatch({ type: "SET_PREVIEW", slide: MOCK_SLIDE });
 

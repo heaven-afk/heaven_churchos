@@ -22,6 +22,7 @@ export async function proxy(request: NextRequest) {
 
   // Unrestricted routes: Presentation output display, auth pages, static assets
   if (
+    pathname === "/api/output-relay" ||
     pathname.startsWith("/presentation") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_next") ||
@@ -64,8 +65,8 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
   } catch {
-    // If auth checking fails due to network, do not block workstation
-    return response;
+    // Configured cloud authentication must never silently become local access.
+    return new NextResponse('Unable to verify your session. Reconnect and reload to sign in.', {status: 503});
   }
 
   return response;

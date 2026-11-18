@@ -1,8 +1,26 @@
-# Veyrin
+# Heaven Church OS
+
+Repository: [heaven-afk/heaven_churchos](https://github.com/heaven-afk/heaven_churchos).
+For Vercel import settings, environment variables and hosted feature limits, see
+[DEPLOYMENT.md](DEPLOYMENT.md). Run `npm run check:deploy` before deploying.
+
+Working brand for the church presentation workstation. See
+[PRODUCTION_REVIEW.md](PRODUCTION_REVIEW.md) for the current audit, EasyWorship
+comparison, verified behavior, and release blockers.
+
+For a local production run: `npm install`, `npm run build`, then
+`npm run start:local`. Open http://127.0.0.1:3000. OBS is optional: ordinary
+presentation windows work independently. For OBS lower thirds, use Outputs →
+Enable OBS output and paste the generated read-only URL into an OBS Browser source
+at 1920 × 1080. The relay works only on the local single-process server.
+
+Seven complete translations are included locally: KJV, WEB, ASV, BBE, YLT, WBS,
+and open Yoruba (OYCB). NIV, Amplified, and The Message require licensing and are
+not installed. See [Bible licenses](public/bibles/LICENSES.md).
 
 > Modern church presentation and live production platform.
 
-Veyrin is a keyboard-first, offline-capable presentation platform designed for church operators. It makes it fast, clear, and reliable to control Scripture, lyrics, sermon content, images, video, and announcements during a live service.
+Heaven Church OS is a keyboard-first presentation platform designed for church operators. It supports Scripture, lyrics, text, images, video, and announcements from a local workstation.
 
 ---
 
@@ -12,9 +30,10 @@ Veyrin is a keyboard-first, offline-capable presentation platform designed for c
 # 1. Install dependencies
 npm install
 
-# 2. Configure environment
+# 2. Configure environment (optional for local mode)
 cp .env.example .env.local
-# Fill in your Supabase project URL and anon key
+# Leave Supabase unconfigured for local-only use.
+# Hosted cloud use requires the security qualification in PRODUCTION_REVIEW.md.
 
 # 3. Start the development server
 npm run dev
@@ -89,6 +108,9 @@ src/
 |---|---|
 | `npm run dev` | Start development server |
 | `npm run build` | Build for production |
+| `npm run start:local` | Run production server bound to 127.0.0.1 |
+| `npm run verify:outputs` | Check local HTTP output and Bible assets against a running server |
+| `npm run bibles:prepare` | Rebuild Bible assets from the documented upstream sources |
 | `npm run type-check` | TypeScript type checking |
 | `npm run lint` | ESLint |
 | `npm run test` | Run unit tests |
@@ -110,6 +132,8 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full details.
 
 ## Development Phase
 
-This repository is at **Phase 0 — Foundation**.
+This repository implements **Phase 0–2**, with a narrow local OBS Browser Source
+bridge requested during hardening. It is a local release candidate; outstanding
+production acceptance and hosted security work is listed in PRODUCTION_REVIEW.md.
 
 See [MASTER_BUILD.md](./MASTER_BUILD.md) for the full product specification and roadmap.

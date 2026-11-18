@@ -1,6 +1,12 @@
 # Veyrin — Master Build Specification
 
 > **Status:** Initial Product Specification
+
+> **17 November 2026 scope note:** The user explicitly requested OBS compatibility
+> during Phase 2 hardening. A narrow loopback-only OBS Browser Source bridge is
+> authorized for this pass. Full Phase 5 production integrations remain deferred.
+> The working display brand is Heaven Church OS, configured centrally. See
+> PRODUCTION_REVIEW.md for actual readiness, completed fixes and outstanding work.
 > **Project Name:** Veyrin *(working name — subject to change)*
 > **Product Category:** Church Presentation & Live Production Platform
 > **Primary Development Environment:** Antigravity
